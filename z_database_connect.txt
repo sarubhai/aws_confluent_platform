@@ -1,0 +1,60 @@
+# Set Password as in terraform.tfvars
+oracle_password='Password'
+
+# Connect to Oracle XE 11g Source
+sqlplus "sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))" as sysdba
+sqlplus "orcl_user/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))"
+
+set long 100000
+set head off
+set echo off
+set pagesize 0
+set verify off
+set feedback off
+select dbms_metadata.get_ddl('TABLE','EMPLOYEES','ORCL_USER') from dual;
+
+
+# Connect to Oracle XE 11g Target
+sqlplus "sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))" as sysdba
+sqlplus "orcl_user/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))"
+
+CREATE TABLE "ORCL_USER"."EMPLOYEES"("EMPLOYEE_ID" NUMBER(6,0),"FIRST_NAME" VARCHAR2(20),"LAST_NAME" VARCHAR2(25),"EMAIL" VARCHAR2(25),"PHONE_NUMBER" VARCHAR2(20),"HIRE_DATE" DATE,"JOB_ID" VARCHAR2(10),"SALARY" NUMBER(8,2),"COMMISSION_PCT" NUMBER(2,2),"MANAGER_ID" NUMBER(6,0),"DEPARTMENT_ID" NUMBER(4,0));
+# EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID
+
+# https://www.oracle.com/database/technologies/xe-prior-releases.html
+# Oracle Database 11gR2 Express Edition for Linux x64
+# https://download.oracle.com/otn/linux/oracle11g/xe/oracle-xe-11.2.0-1.0.x86_64.rpm.zip?AuthParam=1622784099_422150fe3d10c34c73ba8d17c11c70a0
+
+
+# Connect to Mysql
+mysql -u root -h 127.0.0.1 -p${oracle_password}
+exit
+
+
+# Connect to Postgres
+source ~/.bash_profile
+psql -U postgres -h 127.0.0.1
+\l
+\d
+\dn
+\c postgres
+\d "EMPLOYEES"
+SELECT * FROM "EMPLOYEES";
+\q
+
+
+# Connect to MongoDB
+mongo 127.0.0.1:27017/admin -u root -p ${oracle_password}
+show dbs
+use admin
+show collections
+db.products.find()
+exit
+
+
+# Docker Commands
+docker images
+docker container ls -a
+docker container stop oltp_mysql
+docker rm -f oltp_mysql 
+docker image rm e9123134eb04

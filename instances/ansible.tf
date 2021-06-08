@@ -31,7 +31,7 @@ data "aws_ami" "ansible_centos" {
 
 
 # User Data Init
-data "template_file" "init" {
+data "template_file" "ansible_init_script" {
   template = templatefile("${path.module}/ansible_server.sh", {
     keypair_name        = var.keypair_name
     zookeeper_pvt       = aws_instance.zookeeper[*].private_dns
@@ -72,7 +72,7 @@ resource "aws_instance" "ansible-server" {
     Owner = var.owner
   }
 
-  user_data = data.template_file.init.rendered
+  user_data = data.template_file.ansible_init_script.rendered
   
   connection {
     type     = "ssh"

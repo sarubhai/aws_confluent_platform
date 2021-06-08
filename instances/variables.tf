@@ -18,12 +18,20 @@ variable "public_subnet_id" {
   description = "The public subnets ID."
 }
 
+variable "private_subnet_id" {
+  description = "The private subnets ID."
+}
+
 variable "ansible_sg_id" {
   description = "Security Group for Ansible Server."
 }
 
 variable "confluent_sg_id" {
   description = "Security Group for Confluent Platform."
+}
+
+variable "database_sg_id" {
+  description = "Security Group for Database Server."
 }
 
 variable "ansible_instance_type" {
@@ -60,4 +68,12 @@ variable "ksql_instances" {
 
 variable "keypair_name" {
   description = "The AWS Key pair name."
+}
+
+variable "database_instance_type" {
+  description = "The Database Server Instance Type."
+}
+
+variable "oracle_password" {
+  description = "The Oracle Password."
 }

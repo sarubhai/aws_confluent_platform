@@ -1,6 +1,6 @@
 # Name: variables.tf
 # Owner: Saurav Mitra
-# Description: Variables used by terraform config to create the Security Groups for Ansible Server & Confluent Platform
+# Description: Variables used by terraform config to create the Security Groups for Ansible Server, Confluent Platform & Demo Database Server
 
 variable "prefix" {
   description = "This prefix will be included in the name of the resources."

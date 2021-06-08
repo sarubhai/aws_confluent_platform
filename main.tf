@@ -52,8 +52,10 @@ module "instances" {
   owner                     = var.owner
   vpc_id                    = module.vpc.vpc_id
   public_subnet_id          = module.vpc.public_subnet_id
+  private_subnet_id         = module.vpc.private_subnet_id
   ansible_sg_id             = module.sg.ansible_sg_id
   confluent_sg_id           = module.sg.confluent_sg_id
+  database_sg_id            = module.sg.database_sg_id
   ansible_instance_type     = var.ansible_instance_type
   zookeeper_instances       = var.zookeeper_instances
   kafka_broker_instances    = var.kafka_broker_instances
@@ -63,4 +65,6 @@ module "instances" {
   kafka_connect_instances   = var.kafka_connect_instances
   ksql_instances            = var.ksql_instances
   keypair_name              = var.keypair_name
+  database_instance_type    = var.database_instance_type
+  oracle_password           = var.oracle_password
 }

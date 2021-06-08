@@ -3,6 +3,7 @@
 # Description: Outputs the relevant resources ID, ARN, URL values
 # https://www.terraform.io/docs/configuration/outputs.html
 
+/*
 # VPC & Subnet
 output "vpc_id" {
   value       = module.vpc.vpc_id
@@ -29,6 +30,13 @@ output "confluent_sg_id" {
   value       = module.sg.confluent_sg_id
   description = "Security Group for Confluent Platform."
 }
+
+output "database_sg_id" {
+  value       = module.sg.database_sg_id
+  description = "Security Group for Database Server."
+}
+
+*/
 
 # Instances
 output "ansible_server_ip" {
@@ -69,4 +77,9 @@ output "kafka_connect_instances_ip" {
 output "ksql_instances_ip" {
   value       = module.instances.ksql_instances_ip
   description = "The KSQL Instances IP's."
+}
+
+output "database_server_ip" {
+  value       = module.instances.database_server_ip
+  description = "Database Server IP."
 }

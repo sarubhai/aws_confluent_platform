@@ -1,0 +1,39 @@
+# Contol-Center-UI-Authentication
+
+# /etc/confluent-control-center/control-center-production.properties
+echo "confluent.controlcenter.rest.authentication.method=BASIC" >> /etc/confluent-control-center/control-center-production.properties
+echo "confluent.controlcenter.rest.authentication.realm=c3" >> /etc/confluent-control-center/control-center-production.properties
+echo "confluent.controlcenter.rest.authentication.roles=Administrators,Restricted" >> /etc/confluent-control-center/control-center-production.properties
+echo "confluent.controlcenter.auth.restricted.roles=Restricted" >> /etc/confluent-control-center/control-center-production.properties
+echo "confluent.controlcenter.auth.session.expiration.ms=600000" >> /etc/confluent-control-center/control-center-production.properties
+
+# /etc/confluent-control-center/propertyfile.jaas
+echo 'c3 {' > /etc/confluent-control-center/propertyfile.jaas
+echo '  org.eclipse.jetty.jaas.spi.PropertyFileLoginModule required' >> /etc/confluent-control-center/propertyfile.jaas
+echo '  debug="true"' >> /etc/confluent-control-center/propertyfile.jaas
+echo '  file="/etc/confluent-control-center/login.properties";' >> /etc/confluent-control-center/propertyfile.jaas
+echo '};' >> /etc/confluent-control-center/propertyfile.jaas
+
+# /etc/confluent-control-center/login.properties
+echo 'admin:SecretPassw0rd,Administrators' >> /etc/confluent-control-center/login.properties
+
+
+# /usr/lib/systemd/system/confluent-control-center.service
+
+# Environment="LOG_DIR=/var/log/confluent/control-center" "CONTROL_CENTER_LOG4J_OPTS=-Dlog4j.configuration=file:/etc/confluent-control-center/log4j-rolling.properties"
+# ExecStart=/usr/bin/control-center-start /etc/confluent-control-center/control-center-production.properties
+# Environment="LOG_DIR=/var/log/confluent/control-center" "CONTROL_CENTER_LOG4J_OPTS=-Dlog4j.configuration=file:/etc/confluent-control-center/log4j-rolling.properties" "CONTROL_CENTER_OPTS=-Djava.security.auth.login.config=/etc/confluent-control-center/propertyfile.jaas"
+
+sed -i 's|^Environment=.*$|Environment="LOG_DIR=/var/log/confluent/control-center" "CONTROL_CENTER_LOG4J_OPTS=-Dlog4j.configuration=file:/etc/confluent-control-center/log4j-rolling.properties" "CONTROL_CENTER_OPTS=-Djava.security.auth.login.config=file:/etc/confluent-control-center/propertyfile.jaas"|' /usr/lib/systemd/system/confluent-control-center.service
+
+
+# Restart Service
+systemctl daemon-reload
+systemctl restart confluent-control-center
+systemctl status confluent-control-center
+
+# Monitor Logs
+tail -f /var/log/confluent/control-center/control-center.log
+
+CONTROL_CENTER_OPTS="-Djava.security.auth.login.config=/etc/confluent-control-center/propertyfile.jaas" /usr/bin/control-center-start /etc/confluent-control-center/control-center-production.properties
+

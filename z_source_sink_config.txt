@@ -1,0 +1,163 @@
+# Kafka Connect oracle-jdbc-src
+{
+  "name": "oracle-jdbc-src",
+  "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+  "connection.url": "jdbc:oracle:thin:@dbserver:1521/XE",
+  "connection.user": "orcl_user",
+  "connection.password": "Password",
+  "table.whitelist": [
+    "ORCL_USER.EMPLOYEES"
+  ],
+  "numeric.mapping": "best_fit",
+  "mode": "bulk",
+  "table.types": [
+    "TABLE"
+  ]
+}
+
+# Kafka Connect oracle-jdbc-tgt
+{
+  "name": "oracle-jdbc-tgt",
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "topics": [
+    "EMPLOYEES"
+  ],
+  "connection.url": "jdbc:oracle:thin:@dbserver:1525/XE",
+  "connection.user": "orcl_user",
+  "connection.password": "Password",
+  "insert.mode": "insert",
+  "table.types": [
+    "TABLE"
+  ],
+  "table.name.format": "EMPLOYEES"
+}
+
+# Kafka Connect postgres-jdbc-tgt
+{
+  "name": "postgres-jdbc-tgt",
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "topics": [
+    "EMPLOYEES"
+  ],
+  "connection.url": "jdbc:postgresql://dbserver:5432/postgres",
+  "connection.user": "postgres",
+  "connection.password": "Password",
+  "insert.mode": "insert",
+  "table.name.format": "employees",
+  "auto.create": "true"
+}
+
+
+# Kafka Connect mysql-debezium-src
+{
+  "name": "mysql-debezium-src",
+  "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+  "database.hostname": "dbserver",
+  "database.port": "3306",
+  "database.user": "root",
+  "database.password": "Password",
+  "database.server.name": "sales",
+  "database.history.kafka.bootstrap.servers": "broker1:9092,broker2:9092,broker3:9092",
+  "database.history.kafka.topic": "dbhistory.sales",
+  "include.schema.changes": true,
+  "database.include.list": [
+    "sales"
+  ],
+  "database.history.producer.security.protocol": "SSL",
+  "database.history.producer.ssl.keystore.location": "/var/ssl/private/kafka_connect.keystore.jks",
+  "database.history.producer.ssl.keystore.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/producer.ssl.keystore.password}",
+  "database.history.producer.ssl.truststore.location": "/var/ssl/private/kafka_connect.truststore.jks",
+  "database.history.producer.ssl.truststore.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/producer.ssl.truststore.password}",
+  "database.history.producer.ssl.key.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/producer.ssl.key.password}",
+  "database.history.consumer.security.protocol": "SSL",
+  "database.history.consumer.ssl.keystore.location": "/var/ssl/private/kafka_connect.keystore.jks",
+  "database.history.consumer.ssl.keystore.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/consumer.ssl.keystore.password}",
+  "database.history.consumer.ssl.truststore.location": "/var/ssl/private/kafka_connect.truststore.jks",
+  "database.history.consumer.ssl.truststore.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/consumer.ssl.truststore.password}",
+  "database.history.consumer.ssl.key.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/consumer.ssl.key.password}"
+}
+
+# Kafka Connect mysql-jdbc-src
+{
+  "name": "mysql-jdbc-src",
+  "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+  "connection.url": "jdbc:mysql://dbserver:3306/sales",
+  "connection.user": "root",
+  "connection.password": "Password",
+  "table.whitelist": [
+    "CUSTOMER"
+  ],
+  "mode": "incrementing",
+  "incrementing.column.name": "id",
+  "table.types": [
+    "TABLE"
+  ]
+}
+
+# Kafka Connect mongo-tgt
+{
+  "name": "mongo-tgt",
+  "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
+  "topics": [
+    "sales.sales.product"
+  ],
+  "connection.uri": "mongodb://root:Password@dbserver:27017",
+  "database": "admin",
+  "collection": "products"
+}
+
+# Kafka Connect elastic-tgt
+{
+  "name": "elastic-tgt",
+  "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+  "transforms": [
+    "ExtractField"
+  ],
+  "topics": [
+    "sales.sales.product"
+  ],
+  "transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+  "connection.url": [
+    "http://dbserver:9200"
+  ],
+  "connection.username": "elastic",
+  "connection.password": "Password",
+  "write.method": "insert"
+}
+
+
+
+# Kafka Connect oracle-cdc-src
+{
+  "name": "oracle-cdc-src",
+  "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+  "oracle.server": "dbserver",
+  "oracle.port": "1520",
+  "oracle.sid": "XE",
+  "oracle.username": "orcl_user",
+  "oracle.password": "Password",
+  "numeric.mapping": "best_fit",
+  "table.inclusion.regex": "XE[.]ORCL_USER[.](EMPLOYEES)"
+}
+
+# Kafka Connect oracle-cdc-jdbc-tgt
+{
+  "name": "oracle-cdc-jdbc-tgt",
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "topics": [
+    "XE.ORCL_USER.EMPLOYEES"
+  ],
+  "connection.url": "jdbc:oracle:thin:@dbserver:1525/XEPDB1",
+  "connection.user": "orcl_user",
+  "connection.password": "Password",
+  "insert.mode": "insert",
+  "table.types": [
+    "TABLE"
+  ],
+  "table.name.format": "ORCL_USER.EMPLOYEES",
+  "pk.mode": "none",
+  "fields.whitelist": [
+    "EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID"
+  ],
+  "auto.create": "false"
+}

@@ -65,7 +65,7 @@ variable "internet_cidr_block" {
 # Instances
 variable "ansible_instance_type" {
   description = "The Ansible Server Instance Type."
-  default     = "t2.large"
+  default     = "t2.micro"
 }
 
 variable "zookeeper_instances" {
@@ -101,4 +101,14 @@ variable "kafka_connect_instances" {
 variable "ksql_instances" {
   description = "The KSQL Instances."
   default     = { instance_type : "t2.large", volume : 30, count : 1 }
+}
+
+variable "database_instance_type" {
+  description = "The Database Server Instance Type."
+  default     = "t2.large"
+}
+
+variable "oracle_password" {
+  description = "The Oracle Password."
+  default     = "Password123456"
 }
