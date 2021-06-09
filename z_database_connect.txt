@@ -28,6 +28,9 @@ CREATE TABLE "ORCL_USER"."EMPLOYEES"("EMPLOYEE_ID" NUMBER(6,0),"FIRST_NAME" VARC
 
 # Connect to Mysql
 mysql -u root -h 127.0.0.1 -p${oracle_password}
+use sales;
+select count(1) from product;
+desc product;
 exit
 
 

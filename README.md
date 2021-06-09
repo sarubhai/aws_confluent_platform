@@ -15,6 +15,8 @@ The Instances & Services that will be deployed from this repository are:
 - Kafka Connect Instances
 - KSQL Server Instances
 
+### Prerequisite
+Terraform is already installed
 ## Usage
 - Clone this repository
 - Copy your AWS Keypair pem file (private key) under instances directory

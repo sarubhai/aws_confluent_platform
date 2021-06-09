@@ -1,41 +1,57 @@
-# https://www.confluent.io/hub/
-# Oracle CDC Connector
-confluent-hub install confluentinc/kafka-connect-oracle-cdc:latest
-
-Confluent Platform installations: 1. / (installed rpm/deb package)
-Specify installation directory: /usr/share/java/confluent-hub-components
-I agree to the software license agreement (yN) y
-
-Detected Worker's configs:
-  1. Standard: /etc/kafka/connect-distributed.properties
-  2. Standard: /etc/kafka/connect-standalone.properties
-  3. Standard: /etc/schema-registry/connect-avro-distributed.properties
-  4. Standard: /etc/schema-registry/connect-avro-standalone.properties
-  5. Used by Connect process with PID 10744: /etc/kafka/connect-distributed.properties
-Do you want to update all detected configs? (yN) y
-
-confluent-hub install confluentinc/kafka-connect-elasticsearch:11.0.4
-
-confluent-hub install mongodb/kafka-connect-mongodb:1.5.0
-
-confluent-hub install confluentinc/kafka-connect-jdbc:latest
-
+############
 # JDBC JAR's
+############
 mkdir /usr/share/java/kafka-connect-jdbc
 cd /usr/share/java/kafka-connect-jdbc
 
+# Oracle
 curl -L -s https://download.oracle.com/otn-pub/otn_software/jdbc/211/ojdbc8.jar -o ojdbc8.jar
 
+# Mysql/MariaDB
 curl -L -s https://downloads.mariadb.com/Connectors/java/connector-java-2.7.3/mariadb-java-client-2.7.3.jar -o mariadb-java-client-2.7.3.jar
 curl -L -s https://cdn.mysql.com//Downloads/Connector-J/mysql-connector-java-8.0.25.tar.gz -o mysql-connector-java-8.0.25.tar.gz
 tar -xvf mysql-connector-java-8.0.25.tar.gz
 mv /usr/share/java/kafka-connect-jdbc/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25.jar /usr/share/java/kafka-connect-jdbc/mysql-connector-java-8.0.25.jar
 rm -rf mysql-connector-java-8.0.25.tar.gz mysql-connector-java-8.0.25
 
-# ExecStart=/usr/bin/connect-distributed /etc/kafka/connect-distributed.properties
+#################
+# Kafka Connector
+#################
+# https://www.confluent.io/hub/
+# Oracle CDC Connector
+confluent-hub install confluentinc/kafka-connect-aws-redshift:latest
+
+The component can be installed in any of the following Confluent Platform installations:
+  1. / (installed rpm/deb package)
+  2. / (where this tool is installed)
+Choose one of these to continue the installation (1-2): 1
+Do you want to install this into /usr/share/confluent-hub-components? (yN) N
+
+Specify installation directory: /usr/share/java/confluentinc-kafka-connect-aws-redshift
+
+Component's license:
+Confluent Software Evaluation License
+https://www.confluent.io/software-evaluation-license
+I agree to the software license agreement (yN) y
+
+Downloading component Kafka Connect Redshift 1.1.0, provided by Confluent, Inc. from Confluent Hub and installing into /usr/share/java/confluentinc-kafka-connect-aws-redshift
+Detected Worker's configs:
+  1. Standard: /etc/kafka/connect-distributed.properties
+  2. Standard: /etc/kafka/connect-standalone.properties
+  3. Standard: /etc/schema-registry/connect-avro-distributed.properties
+  4. Standard: /etc/schema-registry/connect-avro-standalone.properties
+  5. Used by Connect process with PID 10993: /etc/kafka/connect-distributed.properties
+Do you want to update all detected configs? (yN) N
+
+#################
 # Restart Service
+#################
+# ExecStart=/usr/bin/connect-distributed /etc/kafka/connect-distributed.properties
+
 systemctl restart confluent-kafka-connect
 systemctl status confluent-kafka-connect
 
+##############
 # Monitor Logs
+##############
 tail -f /var/log/kafka/connect.log

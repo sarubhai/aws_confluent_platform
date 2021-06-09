@@ -19,6 +19,8 @@ curl -L -s https://download.oracle.com/otn_software/linux/instantclient/211000/o
 sudo yum -y install libaio
 sudo rpm -ivh oracle-instantclient-basic-21.1.0.0.0-1.x86_64.rpm
 sudo rpm -ivh oracle-instantclient-sqlplus-21.1.0.0.0-1.x86_64.rpm
+rm -rf /root/oracle-instantclient-basic-21.1.0.0.0-1.x86_64.rpm
+rm -rf /root/oracle-instantclient-sqlplus-21.1.0.0.0-1.x86_64.rpm
 
 echo 'ORACLE_HOME=/usr/lib/oracle/21/client64' >> ~/.bash_profile 
 echo 'PATH=$ORACLE_HOME/bin:$PATH' >> ~/.bash_profile
@@ -30,6 +32,9 @@ source ~/.bash_profile
 
 
 # Build Oracle 11g Image (oracle/database:11.2.0.2-xe)
+cd /root
+sudo yum -y install git
+git clone https://github.com/oracle/docker-images.git
 cd /root/docker-images/OracleDatabase/SingleInstance/dockerfiles/11.2.0.2
 curl https://ashnik-confluent-oracle-demo.s3-us-west-2.amazonaws.com/oracle-xe-11.2.0-1.0.x86_64.rpm.zip -o oracle-xe-11.2.0-1.0.x86_64.rpm.zip
 cd /root/docker-images/OracleDatabase/SingleInstance/dockerfiles
@@ -49,6 +54,7 @@ echo '        ports:' >> docker-compose.yml
 echo '            - "1521:1521"' >> docker-compose.yml
 echo '        environment:' >> docker-compose.yml
 echo "            - ORACLE_PWD=${oracle_password}" >> docker-compose.yml
+
 docker-compose up -d
 
 # Spawn Oracle Target Container
@@ -64,9 +70,8 @@ echo '        ports:' >> docker-compose.yml
 echo '            - "1525:1521"' >> docker-compose.yml
 echo '        environment:' >> docker-compose.yml
 echo "            - ORACLE_PWD=${oracle_password}" >> docker-compose.yml
+
 docker-compose up -d
-
-
 # Initial Database Setup
 # Oracle XE 11g Source
 until [ "`docker inspect -f {{.State.Health.Status}} oracle_src_oracle_src_1`"=="healthy" ]; do
@@ -106,10 +111,27 @@ EOF
 # Install MySQL Client
 sudo yum -y install mysql
 # Spawn MySQL/MaraiDB Container
-docker run --name oltp_mysql -d -p 3306:3306 -e MYSQL_ROOT_HOST='%' -e MYSQL_ROOT_PASSWORD=${oracle_password} mariadb:latest --log-bin --binlog-format=ROW
+mkdir /root/mariadb
+cd /root/mariadb
+echo "version: '3.1'" > docker-compose.yml
+echo 'services:' >> docker-compose.yml
+echo '  mariadb:' >> docker-compose.yml
+echo '    image: mariadb:latest' >> docker-compose.yml
+echo '    environment:' >> docker-compose.yml
+echo "      MYSQL_ROOT_HOST: '%'" >> docker-compose.yml
+echo "      MYSQL_ROOT_PASSWORD: ${oracle_password}" >> docker-compose.yml
+echo '    command:' >> docker-compose.yml
+echo '    - --log-bin=binlog' >> docker-compose.yml
+echo '    - --binlog-format=ROW' >> docker-compose.yml
+echo '    ports:' >> docker-compose.yml
+echo '      - 3306:3306' >> docker-compose.yml
+
+docker-compose up -d
 # MySQL Source Database
-mkdir /root/sqlfiles
-cd /root/sqlfiles
+until [ "`docker inspect -f {{.State.Health.Status}} mariadb_mariadb_1`"=="healthy" ]; do
+    sleep 60;
+done;
+
 curl -L https://s3-ap-southeast-1.amazonaws.com/dwbi-datalake/dataset/showroom.sql -o showroom.sql
 curl -L https://s3-ap-southeast-1.amazonaws.com/dwbi-datalake/dataset/customer.sql -o customer.sql
 curl -L https://s3-ap-southeast-1.amazonaws.com/dwbi-datalake/dataset/product.sql -o product.sql
@@ -117,11 +139,11 @@ curl -L https://s3-ap-southeast-1.amazonaws.com/dwbi-datalake/dataset/sales.sql 
 curl -L https://s3-ap-southeast-1.amazonaws.com/dwbi-datalake/dataset/stocks.sql -o stocks.sql
 
 mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} -e "create database sales;"
-mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/sqlfiles/showroom.sql
-mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/sqlfiles/customer.sql
-mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/sqlfiles/product.sql
-mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/sqlfiles/sales.sql
-mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/sqlfiles/stocks.sql
+mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/mariadb/showroom.sql
+mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/mariadb/customer.sql
+mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/mariadb/product.sql
+mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/mariadb/sales.sql
+mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} sales < /root/mariadb/stocks.sql
 
 mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} -e "alter table showroom modify column id int auto_increment primary key;" sales
 mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} -e "alter table customer modify column id int auto_increment primary key;" sales
@@ -132,12 +154,22 @@ mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} -e "alter ta
 # Install PostgreSQL Client
 sudo yum -y install postgresql
 # Spawn PostgreSQL Container
-docker run --name oltp_postgres -d -p 5432:5432 -e MYSQL_ROOT_HOST='%' -e POSTGRES_PASSWORD=${oracle_password} postgres:latest
-# PostgreSQL Source Database
+mkdir /root/postgres
+cd /root/postgres
+echo "version: '3.1'" > docker-compose.yml
+echo 'services:' >> docker-compose.yml
+echo '  postgres:' >> docker-compose.yml
+echo '    image: postgres:latest' >> docker-compose.yml
+echo '    environment:' >> docker-compose.yml
+echo "      POSTGRES_PASSWORD: ${oracle_password}" >> docker-compose.yml
+echo '    ports:' >> docker-compose.yml
+echo '      - 5432:5432' >> docker-compose.yml
+
+docker-compose up -d
+# PostgreSQL Database
 echo "PGPASSWORD=${oracle_password}" >> ~/.bash_profile 
 echo 'export PGPASSWORD' >> ~/.bash_profile
 source ~/.bash_profile
-psql -h 127.0.0.1 -p 5432 -U postgres
 
 
 # Spawn Elasticsearch & Kibana Container

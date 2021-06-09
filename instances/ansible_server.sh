@@ -29,6 +29,8 @@ log "    ansible_ssh_private_key_file: /home/centos/.ssh/${keypair_name}.pem"
 log "    ssl_enabled: true"
 log "    ssl_mutual_auth_enabled: true"
 log "    secrets_protection_enabled: true"
+log "    health_checks_enabled: true"
+log "    sasl_protocol: plain"
 
 
 log "zookeeper:"
@@ -67,6 +69,14 @@ log "    ${addr}:"
 %{ endfor ~}
 
 log "kafka_connect:"
+log "  vars:"
+log "    kafka_connect_confluent_hub_plugins:"
+log "    - confluentinc/kafka-connect-jdbc:latest"
+log "    - confluentinc/kafka-connect-oracle-cdc:latest"
+log "    - confluentinc/kafka-connect-elasticsearch:latest"
+log "    - mongodb/kafka-connect-mongodb:latest"
+log "    - debezium/debezium-connector-postgresql:latest"
+log "    - debezium/debezium-connector-mysql:latest"
 log "  hosts:"
 %{ for index, addr in kafka_connect_pvt ~}
 log "    ${addr}:"
@@ -82,3 +92,9 @@ log "    ${addr}:"
 
 # Run Ansible Playbook
 ansible-playbook -vvv -i hosts.yml all.yml --ssh-common-args='-o StrictHostKeyChecking=no' > failure.txt
+
+
+kafka_connect:
+  ## Installing Connectors From Confluent Hub
+  kafka_connect_confluent_hub_plugins:
+  - jcustenborder/kafka-connect-spooldir:2.0.43
