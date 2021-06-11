@@ -74,8 +74,8 @@ echo "            - ORACLE_PWD=${oracle_password}" >> docker-compose.yml
 docker-compose up -d
 # Initial Database Setup
 # Oracle XE 11g Source
-until [ "`docker inspect -f {{.State.Health.Status}} oracle_src_oracle_src_1`"=="healthy" ]; do
-    sleep 60;
+while [ "`docker inspect -f {{.State.Health.Status}} oracle_src_oracle_src_1`" != "healthy" ]; do
+  sleep 60;
 done;
 
 sqlplus -s /nolog <<EOF >${oracle_password}
@@ -96,14 +96,16 @@ quit
 EOF
 
 # Oracle XE 11g Target
-until [ "`docker inspect -f {{.State.Health.Status}} oracle_tgt_oracle_tgt_1`"=="healthy" ]; do
-    sleep 60;
+while [ "`docker inspect -f {{.State.Health.Status}} oracle_tgt_oracle_tgt_1`" != "healthy" ]; do
+  sleep 60;
 done;
 
 sqlplus -s /nolog <<EOF >${oracle_password}
 connect sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE))) as sysdba
 create user orcl_user identified by ${oracle_password};
 grant DBA to orcl_user;
+CREATE TABLE "ORCL_USER"."EMPLOYEES"("EMPLOYEE_ID" NUMBER(6,0),"FIRST_NAME" VARCHAR2(20),"LAST_NAME" VARCHAR2(25),"EMAIL" VARCHAR2(25),"PHONE_NUMBER" VARCHAR2(20),"HIRE_DATE" DATE,"JOB_ID" VARCHAR2(10),"SALARY" NUMBER(8,2),"COMMISSION_PCT" NUMBER(2,2),"MANAGER_ID" NUMBER(6,0),"DEPARTMENT_ID" NUMBER(4,0));
+CREATE TABLE "ORCL_USER"."EMPLOYEES1"("EMPLOYEE_ID" NUMBER(6,0),"FIRST_NAME" VARCHAR2(20),"LAST_NAME" VARCHAR2(25),"EMAIL" VARCHAR2(25),"PHONE_NUMBER" VARCHAR2(20),"HIRE_DATE" DATE,"JOB_ID" VARCHAR2(10),"SALARY" NUMBER(8,2),"COMMISSION_PCT" NUMBER(2,2),"MANAGER_ID" NUMBER(6,0),"DEPARTMENT_ID" NUMBER(4,0));
 quit
 EOF
 
@@ -128,9 +130,7 @@ echo '      - 3306:3306' >> docker-compose.yml
 
 docker-compose up -d
 # MySQL Source Database
-until [ "`docker inspect -f {{.State.Health.Status}} mariadb_mariadb_1`"=="healthy" ]; do
-    sleep 60;
-done;
+sleep 60;
 
 curl -L https://s3-ap-southeast-1.amazonaws.com/dwbi-datalake/dataset/showroom.sql -o showroom.sql
 curl -L https://s3-ap-southeast-1.amazonaws.com/dwbi-datalake/dataset/customer.sql -o customer.sql
@@ -172,7 +172,7 @@ echo 'export PGPASSWORD' >> ~/.bash_profile
 source ~/.bash_profile
 
 
-# Spawn Elasticsearch & Kibana Container
+# Spawn Elasticsearch Container
 mkdir /root/elk
 cd /root/elk
 echo 'version: "3"' > docker-compose.yml
@@ -191,18 +191,6 @@ echo '        soft: -1' >> docker-compose.yml
 echo '        hard: -1' >> docker-compose.yml
 echo '    ports:' >> docker-compose.yml
 echo '      - 9200:9200' >> docker-compose.yml
-echo "    networks: ['elk']" >> docker-compose.yml
-echo '  kibana:' >> docker-compose.yml
-echo '    image: kibana:7.13.1' >> docker-compose.yml
-echo '    environment:' >> docker-compose.yml
-echo '      - ELASTICSEARCH_USERNAME=elastic' >> docker-compose.yml
-echo "      - ELASTICSEARCH_PASSWORD=${oracle_password}" >> docker-compose.yml
-echo "    ports: ['5601:5601']" >> docker-compose.yml
-echo "    networks: ['elk']" >> docker-compose.yml
-echo "    links: ['elasticsearch']" >> docker-compose.yml
-echo "    depends_on: ['elasticsearch']" >> docker-compose.yml
-echo 'networks:' >> docker-compose.yml
-echo '  elk: {}' >> docker-compose.yml
 
 docker-compose up -d
 
@@ -229,3 +217,13 @@ echo '    ports:' >> docker-compose.yml
 echo '      - 27017:27017' >> docker-compose.yml
 
 docker-compose up -d
+
+
+# Install Redis
+sudo yum -y install epel-release
+sudo yum -y update
+sudo yum -y install redis
+sed -i -e "s|bind 127.0.0.1|# bind 127.0.0.1|" /etc/redis.conf
+sed -i -e "s|# requirepass foobared|requirepass ${oracle_password}|" /etc/redis.conf
+systemctl enable redis
+systemctl restart redis

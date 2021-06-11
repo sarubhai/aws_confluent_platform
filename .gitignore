@@ -25,4 +25,6 @@ override.tf.json
 terraform.rc
 
 # Ignore KeyPair file
-instances/cloudflare-us-west-2.pem
+instances/*.pem
+
+sample_source_sink_config.txt

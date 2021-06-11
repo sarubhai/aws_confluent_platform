@@ -43,6 +43,6 @@ output "ksql_instances_ip" {
 }
 
 output "database_server_ip" {
-  value       = aws_instance.database-server.public_ip
+  value       = aws_instance.database-server.private_ip
   description = "Database Server IP."
 }

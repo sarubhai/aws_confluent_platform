@@ -29,10 +29,11 @@ resource "aws_security_group" "ansible_sg" {
   }
 }
 
-# Create Confluent Platform Security Group
-resource "aws_security_group" "confluent_sg" {
-  name        = "${var.prefix}_confluent_sg"
-  description = "Security Group for Confluent Platform"
+
+# Create Zookeeper Security Group
+resource "aws_security_group" "zookeeper_sg" {
+  name        = "${var.prefix}_zookeeper_sg"
+  description = "Security Group for Zookeeper"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -43,7 +44,6 @@ resource "aws_security_group" "confluent_sg" {
     cidr_blocks = [var.internet_cidr_block]
   }
   
-  # Zookeeper
   ingress {
     description = "Zookeeper Peer-to-peer communication"
     from_port   = 2888
@@ -84,8 +84,48 @@ resource "aws_security_group" "confluent_sg" {
     cidr_blocks = [var.internet_cidr_block]
   }
 
+  ingress {
+    description = "JMX"
+    from_port = 1099
+    to_port = 1099
+    protocol = "tcp"
+    cidr_blocks = [var.internet_cidr_block]
+  }
 
-  # Kafka Broker
+  ingress {
+    from_port = -1
+    to_port = -1
+    protocol = "icmp"
+    cidr_blocks = [var.internet_cidr_block] 
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+
+  tags = {
+    Name  = "${var.prefix}-zookeeper-sg"
+    Owner = var.owner
+  }
+}
+
+# Create Kafka Security Group
+resource "aws_security_group" "kafka_sg" {
+  name        = "${var.prefix}_kafka_sg"
+  description = "Security Group for Kafka"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+  
   ingress {
     description = "Kafka Inter-broker listener"
     from_port   = 9091
@@ -118,7 +158,48 @@ resource "aws_security_group" "confluent_sg" {
     cidr_blocks = [var.internet_cidr_block]
   }
 
-  # REST Proxy
+  ingress {
+    description = "JMX"
+    from_port = 1099
+    to_port = 1099
+    protocol = "tcp"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+
+  ingress {
+    from_port = -1
+    to_port = -1
+    protocol = "icmp"
+    cidr_blocks = [var.internet_cidr_block] 
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+
+  tags = {
+    Name  = "${var.prefix}-kafka-sg"
+    Owner = var.owner
+  }
+}
+
+# Create REST Proxy Security Group
+resource "aws_security_group" "rest_proxy_sg" {
+  name        = "${var.prefix}_rest_proxy_sg"
+  description = "Security Group for REST Proxy"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+  
   ingress {
     description = "Kafka REST Proxy"
     from_port   = 8082
@@ -127,7 +208,40 @@ resource "aws_security_group" "confluent_sg" {
     cidr_blocks = [var.internet_cidr_block]
   }
 
-  # Confluent Control Center *
+  ingress {
+    from_port = -1
+    to_port = -1
+    protocol = "icmp"
+    cidr_blocks = [var.internet_cidr_block] 
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+
+  tags = {
+    Name  = "${var.prefix}-rest-proxy-sg"
+    Owner = var.owner
+  }
+}
+
+# Create Control Center Security Group
+resource "aws_security_group" "control_center_sg" {
+  name        = "${var.prefix}_control_center_sg"
+  description = "Security Group for Control Center"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+  
   ingress {
     description = "Kafka Confluent Control Center"
     from_port   = 9021
@@ -136,8 +250,40 @@ resource "aws_security_group" "confluent_sg" {
     cidr_blocks = [var.internet_cidr_block]
   }
 
+  ingress {
+    from_port = -1
+    to_port = -1
+    protocol = "icmp"
+    cidr_blocks = [var.internet_cidr_block] 
+  }
 
-  # Schema Registry
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+
+  tags = {
+    Name  = "${var.prefix}-control-center-sg"
+    Owner = var.owner
+  }
+}
+
+# Create Schema Registry Security Group
+resource "aws_security_group" "schema_registry_sg" {
+  name        = "${var.prefix}_schema_registry_sg"
+  description = "Security Group for Schema Registry"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+  
   ingress {
     description = "Schema Registry REST API"
     from_port   = 8081
@@ -154,8 +300,40 @@ resource "aws_security_group" "confluent_sg" {
     cidr_blocks = [var.internet_cidr_block]
   }
 
+  ingress {
+    from_port = -1
+    to_port = -1
+    protocol = "icmp"
+    cidr_blocks = [var.internet_cidr_block] 
+  }
 
-  # Kafka Connect
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+
+  tags = {
+    Name  = "${var.prefix}-schema_registry-sg"
+    Owner = var.owner
+  }
+}
+
+# Create Kafka Connect Security Group
+resource "aws_security_group" "kafka_connect_sg" {
+  name        = "${var.prefix}_kafka_connect_sg"
+  description = "Security Group for Kafka Connect"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+  
   ingress {
     description = "Kafka Connect REST API"
     from_port   = 8083
@@ -172,8 +350,40 @@ resource "aws_security_group" "confluent_sg" {
     cidr_blocks = [var.internet_cidr_block]
   }
 
+  ingress {
+    from_port = -1
+    to_port = -1
+    protocol = "icmp"
+    cidr_blocks = [var.internet_cidr_block] 
+  }
 
-  # ksqlDB
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+
+  tags = {
+    Name  = "${var.prefix}-kafka-connect-sg"
+    Owner = var.owner
+  }
+}
+
+# Create KSQL Security Group
+resource "aws_security_group" "ksql_sg" {
+  name        = "${var.prefix}_ksql_sg"
+  description = "Security Group for KSQL"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+  
   ingress {
     description = "ksqlDB REST API"
     from_port   = 8088
@@ -190,22 +400,12 @@ resource "aws_security_group" "confluent_sg" {
     cidr_blocks = [var.internet_cidr_block]
   }
 
-
-  ingress {
-    description = "JMX"
-    from_port = 1099
-    to_port = 1099
-    protocol = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
-  }
-
   ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
     cidr_blocks = [var.internet_cidr_block] 
   }
-
 
   egress {
     from_port   = 0
@@ -215,7 +415,7 @@ resource "aws_security_group" "confluent_sg" {
   }
 
   tags = {
-    Name  = "${var.prefix}-confluent-sg"
+    Name  = "${var.prefix}-ksql-sg"
     Owner = var.owner
   }
 }
@@ -287,19 +487,20 @@ resource "aws_security_group" "database_sg" {
     cidr_blocks = [var.internet_cidr_block]
   }
 
-  ingress {
-    description = "Kibana"
-    from_port   = 5601
-    to_port     = 5601
-    protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
-  }
-
   # MongoDB
   ingress {
     description = "MongoDB"
     from_port   = 27017
     to_port     = 27017
+    protocol    = "tcp"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+
+  # Redis
+  ingress {
+    description = "Redis"
+    from_port   = 6379
+    to_port     = 6379
     protocol    = "tcp"
     cidr_blocks = [var.internet_cidr_block]
   }

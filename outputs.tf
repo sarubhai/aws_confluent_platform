@@ -26,9 +26,39 @@ output "ansible_sg_id" {
   description = "Security Group for Ansible Server."
 }
 
-output "confluent_sg_id" {
-  value       = module.sg.confluent_sg_id
-  description = "Security Group for Confluent Platform."
+output "zookeeper_sg_id" {
+  value       = module.sg.zookeeper_sg_id
+  description = "Security Group for Zookeeper."
+}
+
+output "kafka_sg_id" {
+  value       = module.sg.kafka_sg_id
+  description = "Security Group for Kafka."
+}
+
+output "rest_proxy_sg_id" {
+  value       = module.sg.rest_proxy_sg_id
+  description = "Security Group for REST Proxy."
+}
+
+output "control_center_sg_id" {
+  value       = module.sg.control_center_sg_id
+  description = "Security Group for Control Center."
+}
+
+output "schema_registry_sg_id" {
+  value       = module.sg.schema_registry_sg_id
+  description = "Security Group for Schema Registry."
+}
+
+output "kafka_connect_sg_id" {
+  value       = module.sg.kafka_connect_sg_id
+  description = "Security Group for Kafka Connect."
+}
+
+output "ksql_sg_id" {
+  value       = module.sg.ksql_sg_id
+  description = "Security Group for KSQL."
 }
 
 output "database_sg_id" {

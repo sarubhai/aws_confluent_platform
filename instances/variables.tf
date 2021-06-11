@@ -26,8 +26,32 @@ variable "ansible_sg_id" {
   description = "Security Group for Ansible Server."
 }
 
-variable "confluent_sg_id" {
-  description = "Security Group for Confluent Platform."
+variable "zookeeper_sg_id" {
+  description = "Security Group for Zookeeper."
+}
+
+variable "kafka_sg_id" {
+  description = "Security Group for Kafka."
+}
+
+variable "rest_proxy_sg_id" {
+  description = "Security Group for REST Proxy."
+}
+
+variable "control_center_sg_id" {
+  description = "Security Group for Control Center."
+}
+
+variable "schema_registry_sg_id" {
+  description = "Security Group for Schema Registry."
+}
+
+variable "kafka_connect_sg_id" {
+  description = "Security Group for Kafka Connect."
+}
+
+variable "ksql_sg_id" {
+  description = "Security Group for KSQL."
 }
 
 variable "database_sg_id" {

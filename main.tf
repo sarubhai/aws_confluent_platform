@@ -54,7 +54,13 @@ module "instances" {
   public_subnet_id          = module.vpc.public_subnet_id
   private_subnet_id         = module.vpc.private_subnet_id
   ansible_sg_id             = module.sg.ansible_sg_id
-  confluent_sg_id           = module.sg.confluent_sg_id
+  zookeeper_sg_id           = module.sg.zookeeper_sg_id
+  kafka_sg_id               = module.sg.kafka_sg_id
+  rest_proxy_sg_id          = module.sg.rest_proxy_sg_id
+  control_center_sg_id      = module.sg.control_center_sg_id
+  schema_registry_sg_id     = module.sg.schema_registry_sg_id
+  kafka_connect_sg_id       = module.sg.kafka_connect_sg_id
+  ksql_sg_id                = module.sg.ksql_sg_id
   database_sg_id            = module.sg.database_sg_id
   ansible_instance_type     = var.ansible_instance_type
   zookeeper_instances       = var.zookeeper_instances

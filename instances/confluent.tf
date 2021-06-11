@@ -36,7 +36,7 @@ resource "aws_instance" "zookeeper" {
   ami                         = data.aws_ami.confluent_centos.id
   instance_type               = var.zookeeper_instances["instance_type"]
   subnet_id                   = var.private_subnet_id[0]
-  vpc_security_group_ids      = [var.confluent_sg_id]
+  vpc_security_group_ids      = [var.zookeeper_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false
 
@@ -56,7 +56,7 @@ resource "aws_instance" "kafka_broker" {
   ami                         = data.aws_ami.confluent_centos.id
   instance_type               = var.kafka_broker_instances["instance_type"]
   subnet_id                   = var.private_subnet_id[0]
-  vpc_security_group_ids      = [var.confluent_sg_id]
+  vpc_security_group_ids      = [var.kafka_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false
 
@@ -76,7 +76,7 @@ resource "aws_instance" "rest_proxy" {
   ami                         = data.aws_ami.confluent_centos.id
   instance_type               = var.rest_proxy_instances["instance_type"]
   subnet_id                   = var.private_subnet_id[0]
-  vpc_security_group_ids      = [var.confluent_sg_id]
+  vpc_security_group_ids      = [var.rest_proxy_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false
 
@@ -97,7 +97,7 @@ resource "aws_instance" "control_center" {
   instance_type               = var.control_center_instances["instance_type"]
   associate_public_ip_address = true
   subnet_id                   = var.public_subnet_id[0]
-  vpc_security_group_ids      = [var.confluent_sg_id]
+  vpc_security_group_ids      = [var.control_center_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false
 
@@ -117,7 +117,7 @@ resource "aws_instance" "schema_registry" {
   ami                         = data.aws_ami.confluent_centos.id
   instance_type               = var.schema_registry_instances["instance_type"]
   subnet_id                   = var.private_subnet_id[0]
-  vpc_security_group_ids      = [var.confluent_sg_id]
+  vpc_security_group_ids      = [var.schema_registry_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false
 
@@ -137,7 +137,7 @@ resource "aws_instance" "kafka_connect" {
   ami                         = data.aws_ami.confluent_centos.id
   instance_type               = var.kafka_connect_instances["instance_type"]
   subnet_id                   = var.private_subnet_id[0]
-  vpc_security_group_ids      = [var.confluent_sg_id]
+  vpc_security_group_ids      = [var.kafka_connect_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false
 
@@ -157,7 +157,7 @@ resource "aws_instance" "ksql" {
   ami                         = data.aws_ami.confluent_centos.id
   instance_type               = var.ksql_instances["instance_type"]
   subnet_id                   = var.private_subnet_id[0]
-  vpc_security_group_ids      = [var.confluent_sg_id]
+  vpc_security_group_ids      = [var.ksql_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false
 

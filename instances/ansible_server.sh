@@ -73,10 +73,13 @@ log "  vars:"
 log "    kafka_connect_confluent_hub_plugins:"
 log "    - confluentinc/kafka-connect-jdbc:latest"
 log "    - confluentinc/kafka-connect-oracle-cdc:latest"
+log "    - debezium/debezium-connector-mysql:latest"
+log "    - debezium/debezium-connector-postgresql:latest"
 log "    - confluentinc/kafka-connect-elasticsearch:latest"
 log "    - mongodb/kafka-connect-mongodb:latest"
-log "    - debezium/debezium-connector-postgresql:latest"
-log "    - debezium/debezium-connector-mysql:latest"
+log "    - jcustenborder/kafka-connect-redis:latest"
+log "    - confluentinc/kafka-connect-http:latest"
+
 log "  hosts:"
 %{ for index, addr in kafka_connect_pvt ~}
 log "    ${addr}:"
@@ -91,10 +94,8 @@ log "    ${addr}:"
 %{ endfor ~}
 
 # Run Ansible Playbook
-ansible-playbook -vvv -i hosts.yml all.yml --ssh-common-args='-o StrictHostKeyChecking=no' > failure.txt
+ansible-playbook -vvv -i hosts.yml all.yml --ssh-common-args='-o StrictHostKeyChecking=no' > cp-ansible-log.txt
 
-
-kafka_connect:
-  ## Installing Connectors From Confluent Hub
-  kafka_connect_confluent_hub_plugins:
-  - jcustenborder/kafka-connect-spooldir:2.0.43
+# Install jq
+sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+sudo yum -y install jq

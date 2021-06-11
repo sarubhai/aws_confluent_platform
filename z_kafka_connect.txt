@@ -9,6 +9,9 @@ curl -L -s https://download.oracle.com/otn-pub/otn_software/jdbc/211/ojdbc8.jar 
 
 # Mysql/MariaDB
 curl -L -s https://downloads.mariadb.com/Connectors/java/connector-java-2.7.3/mariadb-java-client-2.7.3.jar -o mariadb-java-client-2.7.3.jar
+curl -L -s https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.25/mysql-connector-java-8.0.25.jar -o mysql-connector-java-8.0.25.jar
+curl -L -s https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar -o mysql-connector-java-5.1.45.jar
+
 curl -L -s https://cdn.mysql.com//Downloads/Connector-J/mysql-connector-java-8.0.25.tar.gz -o mysql-connector-java-8.0.25.tar.gz
 tar -xvf mysql-connector-java-8.0.25.tar.gz
 mv /usr/share/java/kafka-connect-jdbc/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25.jar /usr/share/java/kafka-connect-jdbc/mysql-connector-java-8.0.25.jar

@@ -42,8 +42,7 @@ data "template_file" "database_init_script" {
 resource "aws_instance" "database-server" {
   ami                         = data.aws_ami.database_centos.id
   instance_type               = var.database_instance_type
-  associate_public_ip_address = true
-  subnet_id                   = var.public_subnet_id[0]
+  subnet_id                   = var.private_subnet_id[0]
   vpc_security_group_ids      = [var.database_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false
