@@ -1,5 +1,5 @@
 # Confluent platform deployment in AWS
-Deploys Confluent platform in AWS  using Terraform & Ansible
+Deploys Confluent platform in AWS using Terraform & Ansible
 
 ### Reference
 CP-Ansible
@@ -16,10 +16,10 @@ The Instances & Services that will be deployed from this repository are:
 - KSQL Server Instances
 - Demo Database Server Instance
 
-Ansible Controller Node & Confluent Control Center Instances are deployed in Public Subnet, and rest of all the instances are deployed in Private Subnet.
+Ansible Controller Node & Confluent Control Center Instances will be deployed in Public Subnet, and rest of all the instances on Private Subnet.
 Use the Ansible Controller Node as a Jump server to connect to other Instances in Private Subnet.
 
-The Demon Database Server Instance have multiple database types running as docker containers;
+The Demo Database Server Instance have multiple database types running as docker containers;
 - Oracle XE 11g
 - MySQL
 - PostgreSQL
@@ -27,7 +27,7 @@ The Demon Database Server Instance have multiple database types running as docke
 - MongoDB
 - Redis
 
-The Kafka Connect Plugins installed during deployment from Confluent Hub are:
+The Kafka Connect Plugins that will be installed during deployment from Confluent Hub are:
 - confluentinc/kafka-connect-jdbc
 - confluentinc/kafka-connect-oracle-cdc
 - debezium/debezium-connector-mysql
@@ -76,9 +76,12 @@ The Kafka Connect Plugins installed during deployment from Confluent Hub are:
 - JMX	                        1099
 
 ### Prerequisite
-Terraform is already installed
+Terraform is already installed in local machine.
 ## Usage
 - Clone this repository
+- Generate IAM user Access & Secret Key
+- Setup AWS Profile & credentials accordingly in local machine
+- Generate a AWS EC2 Key Pair in the region where you want to deploy the Confluent platform
 - Copy your AWS Keypair pem file (private key) under instances directory
 - Add the below variable values in terraform.tfvars file under the root directory
 
@@ -86,7 +89,7 @@ Terraform is already installed
 ```
 credentials_file = "/Users/JohnDoe/.aws/credentials"
 
-profile = "Confluent-IAM"
+profile = "AWS-Confluent"
 
 keypair_name = "confluent-us-west-2"
 ```
@@ -95,4 +98,4 @@ keypair_name = "confluent-us-west-2"
 - terraform plan
 - terraform apply -auto-approve -refresh=false
 
-Finally browse the control center at [https://<control_center_instance_ip>:9021](https://<control_center_instance_ip>:9021)
+Finally browse the control center at [https://<control_center_public_ip>:9021](https://<control_center_public_ip>:9021)
