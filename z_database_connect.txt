@@ -19,12 +19,25 @@ set feedback off
 select dbms_metadata.get_ddl('TABLE','EMPLOYEES','ORCL_USER') from dual;
 exit
 
+
 # Connect to Oracle XE 11g Target
 sqlplus "sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))" as sysdba
 sqlplus "orcl_user/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))"
 
-CREATE TABLE "ORCL_USER"."EMPLOYEES2"("EMPLOYEE_ID" NUMBER(6,0),"FIRST_NAME" VARCHAR2(20),"LAST_NAME" VARCHAR2(25),"EMAIL" VARCHAR2(25),"PHONE_NUMBER" VARCHAR2(20),"HIRE_DATE" DATE,"JOB_ID" VARCHAR2(10),"SALARY" NUMBER(8,2),"COMMISSION_PCT" NUMBER(2,2),"MANAGER_ID" NUMBER(6,0),"DEPARTMENT_ID" NUMBER(4,0));
-# EMPLOYEE_ID,FIRST_NAME,LAST_NAME,EMAIL,PHONE_NUMBER,HIRE_DATE,JOB_ID,SALARY,COMMISSION_PCT,MANAGER_ID,DEPARTMENT_ID
+SELECT DISTINCT OBJECT_NAME FROM DBA_OBJECTS WHERE OBJECT_TYPE = 'TABLE' AND OWNER = 'ORCL_USER';
+
+select count(1) from CONSULTANTS;
+select * from CONSULTANTS;
+select ID, FIRST_NAME, LAST_NAME, RATE from CONSULTANTS;
+
+insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Saurav', 'Mitra', 'saurav.mitra@ashnik.com', 5000.00, 'perm');
+commit;
+update CONSULTANTS set RATE=6100.25 where EMAIL='saurav.mitra@ashnik.com';
+commit;
+insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Tim', 'Smith', 'tim.smith@freelance.com', 3500.70, 'contract');
+commit;
+delete from CONSULTANTS where EMAIL='tim.smith@freelance.com';
+commit;
 exit
 #################################
 
@@ -48,6 +61,8 @@ psql -U postgres -h 127.0.0.1
 \dn
 \c postgres
 \d "EMPLOYEES"
+\d+ "EMPLOYEES"
+SELECT column_name, data_type, character_maximum_length, is_nullable FROM information_schema.columns WHERE table_name = 'EMPLOYEES' order by ordinal_position;
 SELECT * FROM "EMPLOYEES";
 \q
 #####################

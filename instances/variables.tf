@@ -22,6 +22,10 @@ variable "private_subnet_id" {
   description = "The private subnets ID."
 }
 
+variable "fixed_pvt_ip" {
+  description = "Fixed Private IP's with all in the first private subnet."
+}
+
 variable "ansible_sg_id" {
   description = "Security Group for Ansible Server."
 }
@@ -94,8 +98,8 @@ variable "keypair_name" {
   description = "The AWS Key pair name."
 }
 
-variable "database_instance_type" {
-  description = "The Database Server Instance Type."
+variable "database_instance" {
+  description = "The Database Server Instance."
 }
 
 variable "oracle_password" {

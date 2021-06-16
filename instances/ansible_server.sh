@@ -19,6 +19,7 @@ function log () {
   echo "$@" >> hosts.yml
 }
 
+export ANSIBLE_HOST_KEY_CHECKING=False
 
 log "all:"
 log "  vars:"
@@ -98,4 +99,28 @@ ansible-playbook -vvv -i hosts.yml all.yml --ssh-common-args='-o StrictHostKeyCh
 
 # Install jq
 sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+sudo yum -y update
 sudo yum -y install jq
+
+
+connect=${fixed_pvt_ip}
+if [ "$connect" = true ] ; then
+################################
+# Upload Kafaka Connector Config
+################################
+# Connector: JdbcSourceConnector; Source: Oracle
+# Scenario: Bulk Load Single Table (EMPLOYEES) to Kafka Topic (EMPLOYEES); Poll after 24 hours;
+curl -X PUT -k -H "Content-Type: application/json" --data '{
+  "name": "jdbc-src-oracle-emp-bulk",
+  "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+  "connection.url": "jdbc:oracle:thin:@10.0.1.11:1521/XE",
+  "connection.user": "orcl_user",
+  "connection.password": "${oracle_password}",
+  "table.whitelist": "ORCL_USER.EMPLOYEES",
+  "numeric.mapping": "best_fit",
+  "mode": "bulk",
+  "table.types": "TABLE",
+  "poll.interval.ms": "86400000"
+}' https://10.0.1.40:8083/connectors/jdbc-src-oracle-emp-bulk/config | jq . >> /home/centos/kafka-connect-log.txt
+
+fi

@@ -41,8 +41,9 @@ data "template_file" "database_init_script" {
 # EC2 Instance
 resource "aws_instance" "database-server" {
   ami                         = data.aws_ami.database_centos.id
-  instance_type               = var.database_instance_type
+  instance_type               = var.database_instance["instance_type"]
   subnet_id                   = var.private_subnet_id[0]
+  private_ip                  = var.fixed_pvt_ip ? var.database_instance["pvt_ip"] : null
   vpc_security_group_ids      = [var.database_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false

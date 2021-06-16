@@ -41,7 +41,7 @@ resource "aws_security_group" "zookeeper_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
   
   ingress {
@@ -49,7 +49,7 @@ resource "aws_security_group" "zookeeper_sg" {
     from_port   = 2888
     to_port     = 2888
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -57,7 +57,7 @@ resource "aws_security_group" "zookeeper_sg" {
     from_port   = 3888
     to_port     = 3888
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -65,7 +65,7 @@ resource "aws_security_group" "zookeeper_sg" {
     from_port   = 2181
     to_port     = 2181
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -73,7 +73,7 @@ resource "aws_security_group" "zookeeper_sg" {
     from_port   = 2182
     to_port     = 2182
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -81,7 +81,7 @@ resource "aws_security_group" "zookeeper_sg" {
     from_port   = 7770
     to_port     = 7770
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -89,14 +89,14 @@ resource "aws_security_group" "zookeeper_sg" {
     from_port = 1099
     to_port = 1099
     protocol = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
-    cidr_blocks = [var.internet_cidr_block] 
+    cidr_blocks = [var.vpc_cidr_block] 
   }
 
   egress {
@@ -123,7 +123,7 @@ resource "aws_security_group" "kafka_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
   
   ingress {
@@ -131,7 +131,7 @@ resource "aws_security_group" "kafka_sg" {
     from_port   = 9091
     to_port     = 9091
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -139,7 +139,7 @@ resource "aws_security_group" "kafka_sg" {
     from_port   = 9092
     to_port     = 9092
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -147,7 +147,7 @@ resource "aws_security_group" "kafka_sg" {
     from_port   = 8090
     to_port     = 8090
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -155,7 +155,7 @@ resource "aws_security_group" "kafka_sg" {
     from_port   = 7771
     to_port     = 7771
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -163,14 +163,14 @@ resource "aws_security_group" "kafka_sg" {
     from_port = 1099
     to_port = 1099
     protocol = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
-    cidr_blocks = [var.internet_cidr_block] 
+    cidr_blocks = [var.vpc_cidr_block] 
   }
 
   egress {
@@ -197,7 +197,7 @@ resource "aws_security_group" "rest_proxy_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
   
   ingress {
@@ -205,14 +205,14 @@ resource "aws_security_group" "rest_proxy_sg" {
     from_port   = 8082
     to_port     = 8082
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
-    cidr_blocks = [var.internet_cidr_block] 
+    cidr_blocks = [var.vpc_cidr_block] 
   }
 
   egress {
@@ -239,7 +239,7 @@ resource "aws_security_group" "control_center_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
   
   ingress {
@@ -247,14 +247,14 @@ resource "aws_security_group" "control_center_sg" {
     from_port   = 9021
     to_port     = 9021
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
-    cidr_blocks = [var.internet_cidr_block] 
+    cidr_blocks = [var.vpc_cidr_block] 
   }
 
   egress {
@@ -281,7 +281,7 @@ resource "aws_security_group" "schema_registry_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
   
   ingress {
@@ -289,7 +289,7 @@ resource "aws_security_group" "schema_registry_sg" {
     from_port   = 8081
     to_port     = 8081
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -297,14 +297,14 @@ resource "aws_security_group" "schema_registry_sg" {
     from_port   = 7772
     to_port     = 7772
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
-    cidr_blocks = [var.internet_cidr_block] 
+    cidr_blocks = [var.vpc_cidr_block] 
   }
 
   egress {
@@ -331,7 +331,7 @@ resource "aws_security_group" "kafka_connect_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
   
   ingress {
@@ -339,7 +339,7 @@ resource "aws_security_group" "kafka_connect_sg" {
     from_port   = 8083
     to_port     = 8083
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -347,14 +347,14 @@ resource "aws_security_group" "kafka_connect_sg" {
     from_port   = 7773
     to_port     = 7773
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
-    cidr_blocks = [var.internet_cidr_block] 
+    cidr_blocks = [var.vpc_cidr_block] 
   }
 
   egress {
@@ -381,7 +381,7 @@ resource "aws_security_group" "ksql_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
   
   ingress {
@@ -389,7 +389,7 @@ resource "aws_security_group" "ksql_sg" {
     from_port   = 8088
     to_port     = 8088
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -397,14 +397,14 @@ resource "aws_security_group" "ksql_sg" {
     from_port   = 7774
     to_port     = 7774
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
-    cidr_blocks = [var.internet_cidr_block] 
+    cidr_blocks = [var.vpc_cidr_block] 
   }
 
   egress {
@@ -432,7 +432,7 @@ resource "aws_security_group" "database_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   # Oracle
@@ -441,7 +441,7 @@ resource "aws_security_group" "database_sg" {
     from_port   = 1521
     to_port     = 1521
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -449,7 +449,7 @@ resource "aws_security_group" "database_sg" {
     from_port   = 1525
     to_port     = 1525
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   # MySQL
@@ -458,7 +458,7 @@ resource "aws_security_group" "database_sg" {
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   # Postgres
@@ -467,7 +467,7 @@ resource "aws_security_group" "database_sg" {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
@@ -475,7 +475,7 @@ resource "aws_security_group" "database_sg" {
     from_port   = 5444
     to_port     = 5444
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   # Elasticsearch
@@ -484,7 +484,15 @@ resource "aws_security_group" "database_sg" {
     from_port   = 9200
     to_port     = 9200
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
+  }
+
+  ingress {
+    description = "Kibana"
+    from_port   = 5601
+    to_port     = 5601
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   # MongoDB
@@ -493,7 +501,7 @@ resource "aws_security_group" "database_sg" {
     from_port   = 27017
     to_port     = 27017
     protocol    = "tcp"
-    cidr_blocks = [var.internet_cidr_block]
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   # Redis
@@ -501,6 +509,33 @@ resource "aws_security_group" "database_sg" {
     description = "Redis"
     from_port   = 6379
     to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.internet_cidr_block]
+  }
+
+  tags = {
+    Name  = "${var.prefix}-database-sg"
+    Owner = var.owner
+  }
+}
+
+# Create Load Balancer Security Group
+resource "aws_security_group" "elb_sg" {
+  name        = "${var.prefix}_elb_sg"
+  description = "Security Group for Elastic Load Balancer"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = [var.internet_cidr_block]
   }
@@ -513,7 +548,7 @@ resource "aws_security_group" "database_sg" {
   }
 
   tags = {
-    Name  = "${var.prefix}-database-sg"
+    Name  = "${var.prefix}-elb-sg"
     Owner = var.owner
   }
 }

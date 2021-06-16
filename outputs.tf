@@ -113,3 +113,13 @@ output "database_server_ip" {
   value       = module.instances.database_server_ip
   description = "Database Server IP."
 }
+
+output "control_center_url" {
+  value       = module.elb.control_center_url
+  description = "Control Center URL."
+}
+
+output "kibana_url" {
+  value       = module.elb.kibana_url
+  description = "Kibana URL."
+}

@@ -53,6 +53,7 @@ module "instances" {
   vpc_id                    = module.vpc.vpc_id
   public_subnet_id          = module.vpc.public_subnet_id
   private_subnet_id         = module.vpc.private_subnet_id
+  fixed_pvt_ip              = var.fixed_pvt_ip
   ansible_sg_id             = module.sg.ansible_sg_id
   zookeeper_sg_id           = module.sg.zookeeper_sg_id
   kafka_sg_id               = module.sg.kafka_sg_id
@@ -71,6 +72,17 @@ module "instances" {
   kafka_connect_instances   = var.kafka_connect_instances
   ksql_instances            = var.ksql_instances
   keypair_name              = var.keypair_name
-  database_instance_type    = var.database_instance_type
+  database_instance         = var.database_instance
   oracle_password           = var.oracle_password
+}
+
+# ELB
+module "elb" {
+  source                      = "./elb"
+  prefix                      = var.prefix
+  owner                       = var.owner
+  public_subnet_id            = module.vpc.public_subnet_id
+  elb_sg_id                   = module.sg.elb_sg_id
+  control_center_instances_id = module.instances.control_center_instances_id
+  database_server_id          = module.instances.database_server_id
 }

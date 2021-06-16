@@ -23,7 +23,7 @@ output "rest_proxy_instances_ip" {
 }
 
 output "control_center_instances_ip" {
-  value = aws_instance.control_center[*].public_ip
+  value = aws_instance.control_center[*].private_ip
   description = "The Control Center Instances IP's."
 }
 
@@ -45,4 +45,14 @@ output "ksql_instances_ip" {
 output "database_server_ip" {
   value       = aws_instance.database-server.private_ip
   description = "Database Server IP."
+}
+
+output "control_center_instances_id" {
+  value = aws_instance.control_center[*].id
+  description = "The Control Center Instances ID's."
+}
+
+output "database_server_id" {
+  value       = aws_instance.database-server.id
+  description = "Database Server ID."
 }

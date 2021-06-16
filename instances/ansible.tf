@@ -48,6 +48,8 @@ data "template_file" "ansible_init_script" {
     kafka_connect_pub   = aws_instance.kafka_connect[*].public_dns
     ksql_pvt            = aws_instance.ksql[*].private_dns
     ksql_pub            = aws_instance.ksql[*].public_dns
+    oracle_password     = var.oracle_password
+    fixed_pvt_ip        = var.fixed_pvt_ip
   })
 }
 
