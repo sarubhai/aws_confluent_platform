@@ -46,8 +46,3 @@ output "database_sg_id" {
   value       = aws_security_group.database_sg.id
   description = "Security Group for Database Server."
 }
-
-output "elb_sg_id" {
-  value       = aws_security_group.elb_sg.id
-  description = "Security Group for Elastic Load Balancer."
-}

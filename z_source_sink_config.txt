@@ -1,177 +1,6 @@
-# Replace values for the servers accordingly
-dbserver: 10.0.1.100
-kafka-broker1: 10.0.1.20.us-west-2.compute.internal
-kafka-broker2: 10.0.1.21.us-west-2.compute.internal
-kafka-broker3: 10.0.1.22.us-west-2.compute.internal
-kafka-connect: 10.0.1.40
-Password: Password
-
-#####################
-Kafka Connect Plugins
-#####################
-curl -X GET -k https://10.0.1.40:8083/connector-plugins | jq .
-
-#######################################
-# Upload Sample Kafaka Connector Config
-#######################################
-# Connector: JdbcSourceConnector; Source: Oracle
-# Scenario: Bulk Load Single Table (EMPLOYEES) to Kafka Topic (EMPLOYEES); Poll after 24 hours;
-curl -X PUT -k -H "Content-Type: application/json" --data '{
-  "name": "jdbc-src-orcl-emp-bulk",
-  "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-  "connection.url": "jdbc:oracle:thin:@10.0.1.100:1521/XE",
-  "connection.user": "orcl_user",
-  "connection.password": "Password",
-  "table.whitelist": "ORCL_USER.EMPLOYEES",
-  "numeric.mapping": "best_fit",
-  "mode": "bulk",
-  "table.types": "TABLE",
-  "poll.interval.ms": "86400000"
-}' https://10.0.1.40:8083/connectors/jdbc-src-orcl-emp-bulk/config | jq .
-
-
-# curl -X GET -k https://10.0.1.40:8083/connectors | jq .
-# curl -X GET -k https://10.0.1.40:8083/connectors/jdbc-src-orcl-emp-bulk/status | jq .
-
-
-
-# Connector: JdbcSinkConnector; Target: Oracle
-# Scenario: Insert from Kafka Topic (EMPLOYEES) to existing Table (EMPLOYEES);
-curl -X PUT -k -H "Content-Type: application/json" --data '{
-  "name": "jdbc-sink-orcl-emp-insert",
-  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-  "topics": "EMPLOYEES",
-  "connection.url": "jdbc:oracle:thin:@10.0.1.100:1525/XE",
-  "connection.user": "orcl_user",
-  "connection.password": "Password",
-  "insert.mode": "insert",
-  "table.types": "TABLE",
-  "table.name.format": "EMPLOYEES"
-}' https://10.0.1.40:8083/connectors/jdbc-sink-orcl-emp-insert/config | jq .
-
-
-# Connector: JdbcSourceConnector; Source: Oracle
-# Scenario: Incremental Extraction Single Table (CONSULTANTS) to Kafka Topic (BUS-CONSULTANTS);
-curl -X PUT -k -H "Content-Type: application/json" --data '{
-  "name": "jdbc-src-orcl-cnslts-incr",
-  "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-  "connection.url": "jdbc:oracle:thin:@10.0.1.100:1521/XE",
-  "connection.user": "orcl_user",
-  "connection.password": "Password",
-  "table.whitelist": "ORCL_USER.CONSULTANTS",
-  "numeric.mapping": "best_fit",
-  "mode": "timestamp+incrementing",
-  "incrementing.column.name": "ID",
-  "timestamp.column.name": "UPDATED_AT",
-  "table.types": "TABLE",
-  "topic.prefix": "BUS-"
-}' https://10.0.1.40:8083/connectors/jdbc-src-orcl-cnslts-incr/config | jq .
-
-
-# Connector: JdbcSinkConnector; Target: Oracle
-# Scenario: Upsert from Kafka Topic (BUS-CONSULTANTS) to existing Table (CONSULTANTS);
-curl -X PUT -k -H "Content-Type: application/json" --data '{
-  "name": "jdbc-sink-orcl-cnslts-upsert",
-  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-  "topics": "BUS-CONSULTANTS",
-  "connection.url": "jdbc:oracle:thin:@10.0.1.11:1525/XE",
-  "connection.user": "orcl_user",
-  "connection.password": "Password",
-  "dialect.name": "OracleDatabaseDialect",
-  "insert.mode": "upsert",
-  "table.types": "TABLE",
-  "table.name.format": "CONSULTANTS",
-  "pk.mode": "record_value",
-  "pk.fields": "ID"
-}' https://10.0.1.40:8083/connectors/jdbc-sink-orcl-cnslts-upsert/config | jq .
-
-
-# Connector: JdbcSinkConnector; Target: Postgres
-# Scenario: Insert from Kafka Topic (EMPLOYEES) to Table (employees); Create DDL;
-curl -X PUT -k -H "Content-Type: application/json" --data '{
-  "name": "jdbc-sink-postgres-emp-insert",
-  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-  "topics": "EMPLOYEES",
-  "connection.url": "jdbc:postgresql://10.0.1.100:5432/postgres",
-  "connection.user": "postgres",
-  "connection.password": "Password",
-  "insert.mode": "insert",
-  "table.name.format": "employees",
-  "auto.create": "true"
-}' https://10.0.1.40:8083/connectors/jdbc-sink-postgres-emp-insert/config | jq .
-
-
-# Connector: MySqlConnector; Source: MySQL
-# Scenario: CDC All Tables in Schema (sales) to Kafka Topics (sales_sales_<table_name>);
-curl -X PUT -k -H "Content-Type: application/json" --data '{
-  "name": "debezium-mysql-src-mysql-sales-cdc",
-  "connector.class": "io.debezium.connector.mysql.MySqlConnector",
-  "database.hostname": "10.0.1.100",
-  "database.port": "3306",
-  "database.user": "root",
-  "database.password": "Password",
-  "database.server.name": "sales",
-  "database.history.kafka.bootstrap.servers": "10.0.1.20.us-west-2.compute.internal:9092,10.0.1.21.us-west-2.compute.internal:9092,10.0.1.22.us-west-2.compute.internal:9092",
-  "database.history.kafka.topic": "dbhistory.sales",
-  "include.schema.changes": false,
-  "database.include.list": "sales",
-  "database.history.producer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"kafka_connect\" password=${securepass:/var/ssl/private/security.properties:connect-distributed.properties/producer.sasl.jaas.config/org.apache.kafka.common.security.plain.PlainLoginModule/password};",
-  "database.history.producer.sasl.mechanism": "PLAIN",
-  "database.history.producer.security.protocol": "SASL_SSL",
-  "database.history.producer.ssl.keystore.location": "/var/ssl/private/kafka_connect.keystore.jks",
-  "database.history.producer.ssl.keystore.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/producer.ssl.keystore.password}",
-  "database.history.producer.ssl.truststore.location": "/var/ssl/private/kafka_connect.truststore.jks",
-  "database.history.producer.ssl.truststore.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/producer.ssl.truststore.password}",
-  "database.history.producer.ssl.key.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/producer.ssl.key.password}",
-  "database.history.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"kafka_connect\" password=${securepass:/var/ssl/private/security.properties:connect-distributed.properties/consumer.sasl.jaas.config/org.apache.kafka.common.security.plain.PlainLoginModule/password};",
-  "database.history.consumer.sasl.mechanism": "PLAIN",
-  "database.history.consumer.security.protocol": "SASL_SSL",
-  "database.history.consumer.ssl.keystore.location": "/var/ssl/private/kafka_connect.keystore.jks",
-  "database.history.consumer.ssl.keystore.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/consumer.ssl.keystore.password}",
-  "database.history.consumer.ssl.truststore.location": "/var/ssl/private/kafka_connect.truststore.jks",
-  "database.history.consumer.ssl.truststore.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/consumer.ssl.truststore.password}",
-  "database.history.consumer.ssl.key.password": "${securepass:/var/ssl/private/security.properties:connect-distributed.properties/consumer.ssl.key.password}",
-  "transforms": "RemoveDots",
-  "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-  "transforms.RemoveDots.regex": "(.*)\\.(.*)\\.(.*)",
-  "transforms.RemoveDots.replacement": "$1_$2_$3"
-}' https://10.0.1.40:8083/connectors/debezium-mysql-src-mysql-sales-cdc/config | jq .
-
-
-# Connector: MongoSinkConnector; Target: MongoDB
-# Scenario: Insert from Kafka Topic (sales_sales_product) to Collection (products);
-curl -X PUT -k -H "Content-Type: application/json" --data '{
-  "name": "mongo-sink-mongo-prod-insert",
-  "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
-  "topics": "sales_sales_product",
-  "connection.uri": "mongodb://root:Password@10.0.1.100:27017",
-  "database": "admin",
-  "collection": "products"
-}' https://10.0.1.40:8083/connectors/mongo-sink-mongo-prod-insert/config | jq .
-
-
-# Connector: ElasticsearchSinkConnector; Target: Elasticsearch
-# Scenario: Insert/Update from Kafka Topic (sales_sales_product) to Index (products);
-curl -X PUT -k -H "Content-Type: application/json" --data '{
-  "name": "elastic-sink-elastic-prod-upsert",
-  "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
-  "transforms": "dropPrefix",
-  "topics": "sales_sales_product",
-  "connection.url": "http://10.0.1.100:9200",
-  "connection.username": "elastic",
-  "connection.password": "Password",
-  "write.method": "UPSERT",
-  "key.ignore": "true",
-  "schema.ignore":"true",
-  "compact.map.entries": "true",
-  "transforms.dropPrefix.type":"org.apache.kafka.connect.transforms.RegexRouter",
-  "transforms.dropPrefix.regex":"sales_sales_(.*)",
-  "transforms.dropPrefix.replacement":"$1"
-}' https://10.0.1.40:8083/connectors/elastic-sink-elastic-prod-upsert/config | jq .
-
-
 # Connector: OracleCdcSourceConnector; Source: Oracle
 # Scenario: CDC Single Tables (EMPLOYEES) to Kafka Topics (XE_ORCL_USER_EMPLOYEES);
+# WORKED WITHOUT SSL
 curl -X PUT -k -H "Content-Type: application/json" --data '{
   "name": "oracle-src-orcl-emp-cdc",
   "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
@@ -183,6 +12,19 @@ curl -X PUT -k -H "Content-Type: application/json" --data '{
   "numeric.mapping": "best_fit",
   "table.inclusion.regex": "XE[.]ORCL_USER[.](EMPLOYEES)"
 }' https://10.0.1.40:8083/connectors/oracle-src-orcl-emp-cdc/config | jq .
+
+# WORKED WITH SSL ONLY
+curl -X PUT -k -H "Content-Type: application/json" --data '{
+  "name": "oracle-src-orcl-emp-cdc-1",
+  "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+  "oracle.server": "10.0.1.11",
+  "oracle.port": "1521",
+  "oracle.sid": "XE",
+  "oracle.username": "orcl_user",
+  "oracle.password": "Pa55w0rd1234",
+  "numeric.mapping": "best_fit",
+  "table.inclusion.regex": "XE[.]ORCL_USER[.](EMPLOYEES)"
+}' https://10.0.1.78:8083/connectors/oracle-src-orcl-emp-cdc-1/config | jq .
 
 
 # Connector: JdbcSourceConnector; Source: MySQL

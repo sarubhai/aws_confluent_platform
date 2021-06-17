@@ -57,9 +57,10 @@ data "template_file" "ansible_init_script" {
 # EC2 Instance
 resource "aws_instance" "ansible-server" {
   ami                         = data.aws_ami.ansible_centos.id
-  instance_type               = var.ansible_instance_type
+  instance_type               = var.ansible_instance["instance_type"]
   associate_public_ip_address = true
   subnet_id                   = var.public_subnet_id[0]
+  private_ip                  = var.fixed_pvt_ip ? var.ansible_instance["pvt_ip"] : null
   vpc_security_group_ids      = [var.ansible_sg_id]
   key_name                    = var.keypair_name
   source_dest_check           = false

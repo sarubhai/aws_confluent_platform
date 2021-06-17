@@ -4,8 +4,10 @@
 # Description: Configure containerized database server for demo
 
 # Install Docker, Docker-compose
+sudo yum -y update
 sudo yum -y install yum-utils
 sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum -y update
 sudo yum -y install docker-ce docker-ce-cli containerd.io
 sudo systemctl start docker
 sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64" -o /usr/local/bin/docker-compose

@@ -62,8 +62,8 @@ variable "database_sg_id" {
   description = "Security Group for Database Server."
 }
 
-variable "ansible_instance_type" {
-  description = "The Ansible Server Instance Type."
+variable "ansible_instance" {
+  description = "The Ansible Server Instance."
 }
 
 variable "zookeeper_instances" {

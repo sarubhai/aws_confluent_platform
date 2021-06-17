@@ -46,15 +46,5 @@ Detected Worker's configs:
   5. Used by Connect process with PID 10993: /etc/kafka/connect-distributed.properties
 Do you want to update all detected configs? (yN) N
 
-#################
 # Restart Service
-#################
-# ExecStart=/usr/bin/connect-distributed /etc/kafka/connect-distributed.properties
-
 systemctl restart confluent-kafka-connect
-systemctl status confluent-kafka-connect
-
-##############
-# Monitor Logs
-##############
-tail -f /var/log/kafka/connect.log

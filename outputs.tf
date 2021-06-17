@@ -114,12 +114,10 @@ output "database_server_ip" {
   description = "Database Server IP."
 }
 
-output "control_center_url" {
-  value       = module.elb.control_center_url
-  description = "Control Center URL."
-}
 
-output "kibana_url" {
-  value       = module.elb.kibana_url
-  description = "Kibana URL."
+# OPTIONAL TO CONNECT TO VPC USING VPN
+# OpenVPN Access Server
+output "openvpn_access_server_ip" {
+  value       = "https://${module.openvpn.openvpn_access_server_ip}:943/"
+  description = "OpenVPN Access Server IP."
 }

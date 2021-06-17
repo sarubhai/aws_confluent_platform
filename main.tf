@@ -63,7 +63,7 @@ module "instances" {
   kafka_connect_sg_id       = module.sg.kafka_connect_sg_id
   ksql_sg_id                = module.sg.ksql_sg_id
   database_sg_id            = module.sg.database_sg_id
-  ansible_instance_type     = var.ansible_instance_type
+  ansible_instance          = var.ansible_instance
   zookeeper_instances       = var.zookeeper_instances
   kafka_broker_instances    = var.kafka_broker_instances
   rest_proxy_instances      = var.rest_proxy_instances
@@ -76,13 +76,18 @@ module "instances" {
   oracle_password           = var.oracle_password
 }
 
-# ELB
-module "elb" {
-  source                      = "./elb"
-  prefix                      = var.prefix
-  owner                       = var.owner
-  public_subnet_id            = module.vpc.public_subnet_id
-  elb_sg_id                   = module.sg.elb_sg_id
-  control_center_instances_id = module.instances.control_center_instances_id
-  database_server_id          = module.instances.database_server_id
+
+# OPTIONAL TO CONNECT TO VPC USING VPN
+# OpenVPN Server
+module "openvpn" {
+  source                       = "./openvpn"
+  prefix                       = var.prefix
+  owner                        = var.owner
+  vpc_id                       = module.vpc.vpc_id
+  public_subnet_id             = module.vpc.public_subnet_id
+  openvpn_server_ami_name      = var.openvpn_server_ami_name
+  openvpn_server_instance_type = var.openvpn_server_instance_type
+  vpn_admin_user               = var.vpn_admin_user
+  vpn_admin_password           = var.vpn_admin_password
+  keypair_name                 = var.keypair_name
 }
