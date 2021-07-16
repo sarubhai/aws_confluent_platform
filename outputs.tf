@@ -115,7 +115,6 @@ output "database_server_ip" {
 }
 
 
-# OPTIONAL TO CONNECT TO VPC USING VPN
 # OpenVPN Access Server
 output "openvpn_access_server_ip" {
   value       = "https://${module.openvpn.openvpn_access_server_ip}:943/"

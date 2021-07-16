@@ -44,42 +44,45 @@ cd /root/docker-images/OracleDatabase/SingleInstance/dockerfiles
 
 
 # Spawn Oracle Source Container
-cd /root
-mkdir oracle_src
+mkdir /root/oracle_src
 cd /root/oracle_src
-echo 'version: "3"' > docker-compose.yml
-echo 'services:' >> docker-compose.yml
-echo '    oracle_src:' >> docker-compose.yml
-echo '        image: oracle/database:11.2.0.2-xe' >> docker-compose.yml
-echo '        shm_size: 1gb' >> docker-compose.yml
-echo '        ports:' >> docker-compose.yml
-echo '            - "1521:1521"' >> docker-compose.yml
-echo '        environment:' >> docker-compose.yml
-echo "            - ORACLE_PWD=${oracle_password}" >> docker-compose.yml
+sudo tee /root/oracle_src/docker-compose.yml &>/dev/null <<EOF
+version: "3"
+services:
+  oracle_src:
+    image: oracle/database:11.2.0.2-xe
+    shm_size: 1gb
+    ports:
+      - "1521:1521"
+    environment:
+      - ORACLE_PWD=${oracle_password}
+EOF
 
 docker-compose up -d
 
 # Spawn Oracle Target Container
-cd /root
-mkdir oracle_tgt
+mkdir /root/oracle_tgt
 cd /root/oracle_tgt
-echo 'version: "3"' > docker-compose.yml
-echo 'services:' >> docker-compose.yml
-echo '    oracle_tgt:' >> docker-compose.yml
-echo '        image: oracle/database:11.2.0.2-xe' >> docker-compose.yml
-echo '        shm_size: 1gb' >> docker-compose.yml
-echo '        ports:' >> docker-compose.yml
-echo '            - "1525:1521"' >> docker-compose.yml
-echo '        environment:' >> docker-compose.yml
-echo "            - ORACLE_PWD=${oracle_password}" >> docker-compose.yml
+sudo tee /root/oracle_src/docker-compose.yml &>/dev/null <<EOF
+version: "3"
+services:
+  oracle_tgt:
+    image: oracle/database:11.2.0.2-xe
+    shm_size: 1gb
+    ports:
+      - "1525:1521"
+    environment:
+      - ORACLE_PWD=${oracle_password}
+EOF
 
 docker-compose up -d
+
 # Initial Database Setup
 # Oracle XE 11g Source
 while [ "`docker inspect -f {{.State.Health.Status}} oracle_src_oracle_src_1`" != "healthy" ]; do
   sleep 60;
 done;
-
+# SYSDBA
 sqlplus -s /nolog <<EOF >${oracle_password}
 connect sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE))) as sysdba
 alter user hr account unlock identified by hr;
@@ -97,23 +100,7 @@ alter database ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 quit
 EOF
 
-sqlplus -s /nolog <<EOF >${oracle_password}
-connect sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE))) as sysdba
-alter user hr account unlock identified by hr;
-create user orcl_user identified by ${oracle_password};
-grant DBA to orcl_user;
-create table orcl_user.EMPLOYEES as select * from hr.EMPLOYEES;
-create table orcl_user.DEPARTMENTS as select * from hr.DEPARTMENTS;
-create table orcl_user.JOBS as select * from hr.JOBS;
-create table orcl_user.JOB_HISTORY as select * from hr.JOB_HISTORY;
-create table orcl_user.COUNTRIES as select * from hr.COUNTRIES;
-create table orcl_user.REGIONS as select * from hr.REGIONS;
-create table orcl_user.LOCATIONS as select * from hr.LOCATIONS;
-alter database ADD SUPPLEMENTAL LOG DATA;
-alter database ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
-quit
-EOF
-
+# ORCL
 sqlplus -s /nolog <<EOF >${oracle_password}
 connect orcl_user/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))
 CREATE TABLE CONSULTANTS("ID" NUMBER(10) NOT NULL PRIMARY KEY,"FIRST_NAME" VARCHAR(50),"LAST_NAME" VARCHAR(50),"EMAIL" VARCHAR(50),"RATE" NUMBER(8,2),"STATUS" VARCHAR(20),"CREATED_AT" timestamp DEFAULT CURRENT_TIMESTAMP,"UPDATED_AT" timestamp NOT NULL);
@@ -136,7 +123,7 @@ EOF
 while [ "`docker inspect -f {{.State.Health.Status}} oracle_tgt_oracle_tgt_1`" != "healthy" ]; do
   sleep 60;
 done;
-
+# SYSDBA
 sqlplus -s /nolog <<EOF >${oracle_password}
 connect sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE))) as sysdba
 create user orcl_user identified by ${oracle_password};
@@ -153,18 +140,20 @@ sudo yum -y install mysql
 # Spawn MySQL/MaraiDB Container
 mkdir /root/mariadb
 cd /root/mariadb
-echo "version: '3.1'" > docker-compose.yml
-echo 'services:' >> docker-compose.yml
-echo '  mariadb:' >> docker-compose.yml
-echo '    image: mariadb:latest' >> docker-compose.yml
-echo '    environment:' >> docker-compose.yml
-echo "      MYSQL_ROOT_HOST: '%'" >> docker-compose.yml
-echo "      MYSQL_ROOT_PASSWORD: ${oracle_password}" >> docker-compose.yml
-echo '    command:' >> docker-compose.yml
-echo '    - --log-bin=binlog' >> docker-compose.yml
-echo '    - --binlog-format=ROW' >> docker-compose.yml
-echo '    ports:' >> docker-compose.yml
-echo '      - 3306:3306' >> docker-compose.yml
+sudo tee /root/mariadb/docker-compose.yml &>/dev/null <<EOF
+version: "3.1"
+services:
+  mariadb:
+    image: mariadb:latest
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD: ${oracle_password}
+    command:
+    - --log-bin=binlog
+    - --binlog-format=ROW  
+EOF
 
 docker-compose up -d
 # MySQL Source Database
@@ -194,14 +183,20 @@ sudo yum -y install postgresql
 # Spawn PostgreSQL Container
 mkdir /root/postgres
 cd /root/postgres
-echo "version: '3.1'" > docker-compose.yml
-echo 'services:' >> docker-compose.yml
-echo '  postgres:' >> docker-compose.yml
-echo '    image: postgres:latest' >> docker-compose.yml
-echo '    environment:' >> docker-compose.yml
-echo "      POSTGRES_PASSWORD: ${oracle_password}" >> docker-compose.yml
-echo '    ports:' >> docker-compose.yml
-echo '      - 5432:5432' >> docker-compose.yml
+sudo tee /root/postgres/docker-compose.yml &>/dev/null <<EOF
+version: "3.1"
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: ${oracle_password}
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+EOF
 
 docker-compose up -d
 # PostgreSQL Database
@@ -213,34 +208,36 @@ source ~/.bash_profile
 # Spawn Elasticsearch Container
 mkdir /root/elk
 cd /root/elk
-echo 'version: "3"' > docker-compose.yml
-echo 'services:' >> docker-compose.yml
-echo '  elasticsearch:' >> docker-compose.yml
-echo '    image: elasticsearch:7.13.1' >> docker-compose.yml
-echo '    environment:' >> docker-compose.yml
-echo '      - bootstrap.memory_lock=true' >> docker-compose.yml
-echo '      - discovery.type=single-node' >> docker-compose.yml
-echo '      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"' >> docker-compose.yml
-echo "      - ELASTIC_PASSWORD=${oracle_password}" >> docker-compose.yml
-echo '      - xpack.security.enabled=true' >> docker-compose.yml
-echo '    ulimits:' >> docker-compose.yml
-echo '      memlock:' >> docker-compose.yml
-echo '        soft: -1' >> docker-compose.yml
-echo '        hard: -1' >> docker-compose.yml
-echo '    ports:' >> docker-compose.yml
-echo '      - 9200:9200' >> docker-compose.yml
-echo "    networks: ['elk']" >> docker-compose.yml
-echo '  kibana:' >> docker-compose.yml
-echo '    image: kibana:7.13.1' >> docker-compose.yml
-echo '    environment:' >> docker-compose.yml
-echo '      - ELASTICSEARCH_USERNAME=elastic' >> docker-compose.yml
-echo "      - ELASTICSEARCH_PASSWORD=${oracle_password}" >> docker-compose.yml
-echo "    ports: ['5601:5601']" >> docker-compose.yml
-echo "    networks: ['elk']" >> docker-compose.yml
-echo "    links: ['elasticsearch']" >> docker-compose.yml
-echo "    depends_on: ['elasticsearch']" >> docker-compose.yml
-echo 'networks:' >> docker-compose.yml
-echo '  elk: {}' >> docker-compose.yml
+sudo tee /root/elk/docker-compose.yml &>/dev/null <<EOF
+version: "3"
+services:
+  elasticsearch:
+    image: elasticsearch:7.13.1
+    ports:
+      - 9200:9200
+    environment:
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - ELASTIC_PASSWORD=${oracle_password}
+      - xpack.security.enabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks: ['elk']
+  kibana:
+    image: kibana:7.13.1
+    ports: ['5601:5601']
+    environment:
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${oracle_password}
+    networks: ['elk']
+    links: ['elasticsearch']
+    depends_on: ['elasticsearch']
+networks:
+  elk: {}
+EOF
 
 docker-compose up -d
 
@@ -256,15 +253,17 @@ sudo yum -y install mongodb-org-shell-4.4.2
 # Spawn MongoDB Container
 mkdir /root/mongodb
 cd /root/mongodb
-echo "version: '3.1'" > docker-compose.yml
-echo 'services:' >> docker-compose.yml
-echo '  mongo:' >> docker-compose.yml
-echo '    image: mongo' >> docker-compose.yml
-echo '    environment:' >> docker-compose.yml
-echo '      MONGO_INITDB_ROOT_USERNAME: root' >> docker-compose.yml
-echo "      MONGO_INITDB_ROOT_PASSWORD: ${oracle_password}" >> docker-compose.yml
-echo '    ports:' >> docker-compose.yml
-echo '      - 27017:27017' >> docker-compose.yml
+sudo tee /root/mongodb/docker-compose.yml &>/dev/null <<EOF
+version: "3.1"
+services:
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${oracle_password}
+EOF
 
 docker-compose up -d
 
@@ -277,3 +276,23 @@ sed -i -e "s|bind 127.0.0.1|# bind 127.0.0.1|" /etc/redis.conf
 sed -i -e "s|# requirepass foobared|requirepass ${oracle_password}|" /etc/redis.conf
 systemctl enable redis
 systemctl restart redis
+
+
+# Spawn RabbitMQ Container
+mkdir /root/rabbitmq
+cd /root/rabbitmq
+sudo tee /root/rabbitmq/docker-compose.yml &>/dev/null <<EOF
+version: "3.1"
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: "rabbitmq"
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: ${oracle_password}
+EOF
+
+docker-compose up -d

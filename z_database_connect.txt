@@ -86,6 +86,8 @@ keys *
 set key1 10
 get key1
 exit
+# To connect redis database 3
+redis-cli -h 127.0.0.1 -p 6379 -a ${oracle_password} -n 3
 ##################
 
 

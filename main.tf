@@ -2,29 +2,6 @@
 # Owner: Saurav Mitra
 # Description: This terraform config will create the infrastructure resources for Confluent Platform
 
-
-# Configure Terraform 
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 3.0"
-    }
-  }
-}
-
-# Configure AWS Provider
-# https://registry.terraform.io/providers/hashicorp/aws/latest/docs
-# $ export AWS_ACCESS_KEY_ID="AccessKey"
-# $ export AWS_SECRET_ACCESS_KEY="SecretKey"
-
-provider "aws" {
-  shared_credentials_file = var.credentials_file
-  profile                 = var.profile
-  region                  = var.region
-}
-
-
 # VPC & Subnets
 module "vpc" {
   source          = "./vpc"
@@ -72,13 +49,14 @@ module "instances" {
   kafka_connect_instances   = var.kafka_connect_instances
   ksql_instances            = var.ksql_instances
   keypair_name              = var.keypair_name
+  private_key               = var.private_key
   database_instance         = var.database_instance
   oracle_password           = var.oracle_password
 }
 
 
-# OPTIONAL TO CONNECT TO VPC USING VPN
-# OpenVPN Server
+
+# Connect to VPC using OpenVPN Access Server
 module "openvpn" {
   source                       = "./openvpn"
   prefix                       = var.prefix

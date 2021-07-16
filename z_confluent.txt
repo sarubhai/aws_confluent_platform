@@ -1,20 +1,22 @@
 ###########
 # Zookeeper
 ###########
-Service:
+Service: confluent-zookeeper.service
 Binary: 
-Configuration:
-Log File:
+Configuration: /etc/kafka/zookeeper.properties
+Log File: /var/log/kafka/zookeeper-server.log
 Useful Commands:
+    systemctl -l status confluent-zookeeper.service
 
 ##############
 # Kafka Broker
 ##############
-Service:
+Service: confluent-server.service
 Binary: 
-Configuration:
-Log File:
+Configuration: etc/kafka/server.properties
+Log File: /var/log/kafka/server.log
 Useful Commands:
+    systemctl -l status confluent-server.service
 
 Commandline:
 kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=https://ip-10-0-1-30.us-west-2.compute.internal:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
@@ -31,11 +33,12 @@ kafka-acls --bootstrap-server ip-10-0-1-20.us-west-2.compute.internal:9092 --com
 #################
 # Schema Registry
 #################
-Service:
+Service: confluent-schema-registry.service
 Binary: 
-Configuration:
+Configuration: /etc/schema-registry/schema-registry.properties
 Log File:
 Useful Commands:
+    systemctl -l status confluent-schema-registry.service
 
 ###############
 # Kafka Connect
@@ -86,8 +89,9 @@ Commandline:
 ############
 # REST Proxy
 ############
-Service:
+Service: confluent-kafka-rest.service
 Binary: 
-Configuration:
+Configuration: /etc/kafka-rest/kafka-rest.properties
 Log File:
 Useful Commands:
+    systemctl -l status confluent-kafka-rest.service

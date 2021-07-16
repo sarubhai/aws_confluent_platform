@@ -98,6 +98,10 @@ variable "keypair_name" {
   description = "The AWS Key pair name."
 }
 
+variable "private_key" {
+  description = "The AWS Private Key for Ansible instance to connect to other instances for Confluent deployment."
+}
+
 variable "database_instance" {
   description = "The Database Server Instance."
 }

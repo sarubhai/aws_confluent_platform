@@ -23,11 +23,3 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
-
-# Ignore KeyPair file
-instances/*.pem
-
-# Personal local files
-z_addPubKey.sh
-sample_source_sink_config.txt
-z_source_sink_config.txt

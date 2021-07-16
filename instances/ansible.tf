@@ -34,6 +34,7 @@ data "aws_ami" "ansible_centos" {
 data "template_file" "ansible_init_script" {
   template = templatefile("${path.module}/ansible_server.sh", {
     keypair_name        = var.keypair_name
+    private_key         = var.private_key
     zookeeper_pvt       = aws_instance.zookeeper[*].private_dns
     zookeeper_pub       = aws_instance.zookeeper[*].public_dns
     kafka_broker_pvt    = aws_instance.kafka_broker[*].private_dns
@@ -48,8 +49,6 @@ data "template_file" "ansible_init_script" {
     kafka_connect_pub   = aws_instance.kafka_connect[*].public_dns
     ksql_pvt            = aws_instance.ksql[*].private_dns
     ksql_pub            = aws_instance.ksql[*].public_dns
-    oracle_password     = var.oracle_password
-    fixed_pvt_ip        = var.fixed_pvt_ip
   })
 }
 
@@ -76,22 +75,4 @@ resource "aws_instance" "ansible-server" {
   }
 
   user_data = data.template_file.ansible_init_script.rendered
-  
-  connection {
-    type     = "ssh"
-    user     = "centos"
-    private_key = file("${path.module}/${var.keypair_name}.pem")
-    host     = self.public_ip
-  }
-  
-  provisioner "file" {
-    source      = "${path.module}/${var.keypair_name}.pem"
-    destination = "/home/centos/.ssh/${var.keypair_name}.pem"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "chmod 400 /home/centos/.ssh/${var.keypair_name}.pem"
-    ]
-  }
 }

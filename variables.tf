@@ -3,23 +3,13 @@
 # Description: Variables used by terraform config to create the infrastructure resources for Confluent Platform
 # https://www.terraform.io/docs/configuration/variables.html
 
-# AWS Provider
-variable "credentials_file" {
-  description = "Path to the AWS access credentials file."
-}
-
-variable "profile" {
-  description = "AWS Profile name in the AWS access credentials file."
-}
-
 # AWS EC2 KeyPair
 variable "keypair_name" {
   description = "The AWS Key pair name."
 }
 
-variable "region" {
-  description = "The region where the resources are created."
-  default     = "us-west-2"
+variable "private_key" {
+  description = "The AWS Private Key for Ansible instance to connect to other instances for Confluent deployment."
 }
 
 
@@ -31,7 +21,7 @@ variable "prefix" {
 
 variable "owner" {
   description = "This owner name tag will be included in the owner of the resources."
-  default     = "Saurav"
+  default     = "Saurav Mitra"
 }
 
 
@@ -119,7 +109,6 @@ variable "oracle_password" {
 }
 
 
-# OPTIONAL TO CONNECT TO VPC USING VPN
 # OpenVPN Access Server
 variable "openvpn_server_ami_name" {
   description = "The OpenVPN Access Server AMI Name."
