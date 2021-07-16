@@ -105,6 +105,7 @@ AWS_ACCESS_KEY_ID = "access_key"
 AWS_SECRET_ACCESS_KEY = "secret_key"
 
 AWS_DEFAULT_REGION = "us-west-2"
+```
 
 - Change other variables in variables.tf file if needed
 - terraform init
