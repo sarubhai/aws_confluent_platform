@@ -32,14 +32,14 @@ data "aws_ami" "confluent_centos" {
 
 # EC2 Instances
 resource "aws_instance" "zookeeper" {
-  count = var.zookeeper_instances["count"]
-  ami                         = data.aws_ami.confluent_centos.id
-  instance_type               = var.zookeeper_instances["instance_type"]
-  subnet_id                   = var.private_subnet_id[0]
-  private_ip                  = var.fixed_pvt_ip ? var.zookeeper_instances["pvt_ips"][count.index] : null
-  vpc_security_group_ids      = [var.zookeeper_sg_id]
-  key_name                    = var.keypair_name
-  source_dest_check           = false
+  count                  = var.zookeeper_instances["count"]
+  ami                    = data.aws_ami.confluent_centos.id
+  instance_type          = var.zookeeper_instances["instance_type"]
+  subnet_id              = var.private_subnet_id[0]
+  private_ip             = var.fixed_pvt_ip ? var.zookeeper_instances["pvt_ips"][count.index] : null
+  vpc_security_group_ids = [var.zookeeper_sg_id]
+  key_name               = var.keypair_name
+  source_dest_check      = false
 
   root_block_device {
     volume_size           = var.zookeeper_instances["volume"]
@@ -53,14 +53,14 @@ resource "aws_instance" "zookeeper" {
 }
 
 resource "aws_instance" "kafka_broker" {
-  count = var.kafka_broker_instances["count"]
-  ami                         = data.aws_ami.confluent_centos.id
-  instance_type               = var.kafka_broker_instances["instance_type"]
-  subnet_id                   = var.private_subnet_id[0]
-  private_ip                  = var.fixed_pvt_ip ? var.kafka_broker_instances["pvt_ips"][count.index] : null
-  vpc_security_group_ids      = [var.kafka_sg_id]
-  key_name                    = var.keypair_name
-  source_dest_check           = false
+  count                  = var.kafka_broker_instances["count"]
+  ami                    = data.aws_ami.confluent_centos.id
+  instance_type          = var.kafka_broker_instances["instance_type"]
+  subnet_id              = var.private_subnet_id[0]
+  private_ip             = var.fixed_pvt_ip ? var.kafka_broker_instances["pvt_ips"][count.index] : null
+  vpc_security_group_ids = [var.kafka_sg_id]
+  key_name               = var.keypair_name
+  source_dest_check      = false
 
   root_block_device {
     volume_size           = var.kafka_broker_instances["volume"]
@@ -74,14 +74,14 @@ resource "aws_instance" "kafka_broker" {
 }
 
 resource "aws_instance" "rest_proxy" {
-  count = var.rest_proxy_instances["count"]
-  ami                         = data.aws_ami.confluent_centos.id
-  instance_type               = var.rest_proxy_instances["instance_type"]
-  subnet_id                   = var.private_subnet_id[0]
-  private_ip                  = var.fixed_pvt_ip ? var.rest_proxy_instances["pvt_ips"][count.index] : null
-  vpc_security_group_ids      = [var.rest_proxy_sg_id]
-  key_name                    = var.keypair_name
-  source_dest_check           = false
+  count                  = var.rest_proxy_instances["count"]
+  ami                    = data.aws_ami.confluent_centos.id
+  instance_type          = var.rest_proxy_instances["instance_type"]
+  subnet_id              = var.private_subnet_id[0]
+  private_ip             = var.fixed_pvt_ip ? var.rest_proxy_instances["pvt_ips"][count.index] : null
+  vpc_security_group_ids = [var.rest_proxy_sg_id]
+  key_name               = var.keypair_name
+  source_dest_check      = false
 
   root_block_device {
     volume_size           = var.rest_proxy_instances["volume"]
@@ -95,14 +95,14 @@ resource "aws_instance" "rest_proxy" {
 }
 
 resource "aws_instance" "control_center" {
-  count = var.control_center_instances["count"]
-  ami                         = data.aws_ami.confluent_centos.id
-  instance_type               = var.control_center_instances["instance_type"]
-  subnet_id                   = var.private_subnet_id[0]
-  private_ip                  = var.fixed_pvt_ip ? var.control_center_instances["pvt_ips"][count.index] : null
-  vpc_security_group_ids      = [var.control_center_sg_id]
-  key_name                    = var.keypair_name
-  source_dest_check           = false
+  count                  = var.control_center_instances["count"]
+  ami                    = data.aws_ami.confluent_centos.id
+  instance_type          = var.control_center_instances["instance_type"]
+  subnet_id              = var.private_subnet_id[0]
+  private_ip             = var.fixed_pvt_ip ? var.control_center_instances["pvt_ips"][count.index] : null
+  vpc_security_group_ids = [var.control_center_sg_id]
+  key_name               = var.keypair_name
+  source_dest_check      = false
 
   root_block_device {
     volume_size           = var.control_center_instances["volume"]
@@ -116,14 +116,14 @@ resource "aws_instance" "control_center" {
 }
 
 resource "aws_instance" "schema_registry" {
-  count = var.schema_registry_instances["count"]
-  ami                         = data.aws_ami.confluent_centos.id
-  instance_type               = var.schema_registry_instances["instance_type"]
-  subnet_id                   = var.private_subnet_id[0]
-  private_ip                  = var.fixed_pvt_ip ? var.schema_registry_instances["pvt_ips"][count.index] : null
-  vpc_security_group_ids      = [var.schema_registry_sg_id]
-  key_name                    = var.keypair_name
-  source_dest_check           = false
+  count                  = var.schema_registry_instances["count"]
+  ami                    = data.aws_ami.confluent_centos.id
+  instance_type          = var.schema_registry_instances["instance_type"]
+  subnet_id              = var.private_subnet_id[0]
+  private_ip             = var.fixed_pvt_ip ? var.schema_registry_instances["pvt_ips"][count.index] : null
+  vpc_security_group_ids = [var.schema_registry_sg_id]
+  key_name               = var.keypair_name
+  source_dest_check      = false
 
   root_block_device {
     volume_size           = var.schema_registry_instances["volume"]
@@ -137,14 +137,14 @@ resource "aws_instance" "schema_registry" {
 }
 
 resource "aws_instance" "kafka_connect" {
-  count = var.kafka_connect_instances["count"]
-  ami                         = data.aws_ami.confluent_centos.id
-  instance_type               = var.kafka_connect_instances["instance_type"]
-  subnet_id                   = var.private_subnet_id[0]
-  private_ip                  = var.fixed_pvt_ip ? var.kafka_connect_instances["pvt_ips"][count.index] : null
-  vpc_security_group_ids      = [var.kafka_connect_sg_id]
-  key_name                    = var.keypair_name
-  source_dest_check           = false
+  count                  = var.kafka_connect_instances["count"]
+  ami                    = data.aws_ami.confluent_centos.id
+  instance_type          = var.kafka_connect_instances["instance_type"]
+  subnet_id              = var.private_subnet_id[0]
+  private_ip             = var.fixed_pvt_ip ? var.kafka_connect_instances["pvt_ips"][count.index] : null
+  vpc_security_group_ids = [var.kafka_connect_sg_id]
+  key_name               = var.keypair_name
+  source_dest_check      = false
 
   root_block_device {
     volume_size           = var.kafka_connect_instances["volume"]
@@ -158,14 +158,14 @@ resource "aws_instance" "kafka_connect" {
 }
 
 resource "aws_instance" "ksql" {
-  count = var.ksql_instances["count"]
-  ami                         = data.aws_ami.confluent_centos.id
-  instance_type               = var.ksql_instances["instance_type"]
-  subnet_id                   = var.private_subnet_id[0]
-  private_ip                  = var.fixed_pvt_ip ? var.ksql_instances["pvt_ips"][count.index] : null
-  vpc_security_group_ids      = [var.ksql_sg_id]
-  key_name                    = var.keypair_name
-  source_dest_check           = false
+  count                  = var.ksql_instances["count"]
+  ami                    = data.aws_ami.confluent_centos.id
+  instance_type          = var.ksql_instances["instance_type"]
+  subnet_id              = var.private_subnet_id[0]
+  private_ip             = var.fixed_pvt_ip ? var.ksql_instances["pvt_ips"][count.index] : null
+  vpc_security_group_ids = [var.ksql_sg_id]
+  key_name               = var.keypair_name
+  source_dest_check      = false
 
   root_block_device {
     volume_size           = var.ksql_instances["volume"]

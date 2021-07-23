@@ -43,7 +43,7 @@ resource "aws_security_group" "zookeeper_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
-  
+
   ingress {
     description = "Zookeeper Peer-to-peer communication"
     from_port   = 2888
@@ -86,17 +86,17 @@ resource "aws_security_group" "zookeeper_sg" {
 
   ingress {
     description = "JMX"
-    from_port = 1099
-    to_port = 1099
-    protocol = "tcp"
+    from_port   = 1099
+    to_port     = 1099
+    protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = [var.vpc_cidr_block] 
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   egress {
@@ -125,7 +125,7 @@ resource "aws_security_group" "kafka_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
-  
+
   ingress {
     description = "Kafka Inter-broker listener"
     from_port   = 9091
@@ -160,17 +160,17 @@ resource "aws_security_group" "kafka_sg" {
 
   ingress {
     description = "JMX"
-    from_port = 1099
-    to_port = 1099
-    protocol = "tcp"
+    from_port   = 1099
+    to_port     = 1099
+    protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = [var.vpc_cidr_block] 
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   egress {
@@ -199,7 +199,7 @@ resource "aws_security_group" "rest_proxy_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
-  
+
   ingress {
     description = "Kafka REST Proxy"
     from_port   = 8082
@@ -209,10 +209,10 @@ resource "aws_security_group" "rest_proxy_sg" {
   }
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = [var.vpc_cidr_block] 
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   egress {
@@ -241,7 +241,7 @@ resource "aws_security_group" "control_center_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
-  
+
   ingress {
     description = "Kafka Confluent Control Center"
     from_port   = 9021
@@ -251,10 +251,10 @@ resource "aws_security_group" "control_center_sg" {
   }
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = [var.vpc_cidr_block] 
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   egress {
@@ -283,7 +283,7 @@ resource "aws_security_group" "schema_registry_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
-  
+
   ingress {
     description = "Schema Registry REST API"
     from_port   = 8081
@@ -301,10 +301,10 @@ resource "aws_security_group" "schema_registry_sg" {
   }
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = [var.vpc_cidr_block] 
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   egress {
@@ -333,7 +333,7 @@ resource "aws_security_group" "kafka_connect_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
-  
+
   ingress {
     description = "Kafka Connect REST API"
     from_port   = 8083
@@ -351,10 +351,10 @@ resource "aws_security_group" "kafka_connect_sg" {
   }
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = [var.vpc_cidr_block] 
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   egress {
@@ -383,7 +383,7 @@ resource "aws_security_group" "ksql_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }
-  
+
   ingress {
     description = "ksqlDB REST API"
     from_port   = 8088
@@ -401,10 +401,10 @@ resource "aws_security_group" "ksql_sg" {
   }
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = [var.vpc_cidr_block] 
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
 
   egress {
@@ -514,12 +514,12 @@ resource "aws_security_group" "database_sg" {
   }
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = [var.vpc_cidr_block] 
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [var.vpc_cidr_block]
   }
-  
+
   egress {
     from_port   = 0
     to_port     = 0

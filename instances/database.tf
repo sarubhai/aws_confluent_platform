@@ -33,20 +33,20 @@ data "aws_ami" "database_centos" {
 # User Data Init
 data "template_file" "database_init_script" {
   template = templatefile("${path.module}/database_server.sh", {
-    oracle_password     = var.oracle_password
+    oracle_password = var.oracle_password
   })
 }
 
 
 # EC2 Instance
 resource "aws_instance" "database-server" {
-  ami                         = data.aws_ami.database_centos.id
-  instance_type               = var.database_instance["instance_type"]
-  subnet_id                   = var.private_subnet_id[0]
-  private_ip                  = var.fixed_pvt_ip ? var.database_instance["pvt_ip"] : null
-  vpc_security_group_ids      = [var.database_sg_id]
-  key_name                    = var.keypair_name
-  source_dest_check           = false
+  ami                    = data.aws_ami.database_centos.id
+  instance_type          = var.database_instance["instance_type"]
+  subnet_id              = var.private_subnet_id[0]
+  private_ip             = var.fixed_pvt_ip ? var.database_instance["pvt_ip"] : null
+  vpc_security_group_ids = [var.database_sg_id]
+  key_name               = var.keypair_name
+  source_dest_check      = false
 
   root_block_device {
     volume_size           = 30
