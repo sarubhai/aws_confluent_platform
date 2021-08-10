@@ -4,31 +4,14 @@ oracle_password='Password'
 ##########################################
 
 
-#################################
+##########################################
 # Connect to Oracle XE 11g Source
 sqlplus "sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))" as sysdba
 sqlplus "orcl_user/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))"
 
-select count(1) from employees;
-set long 100000
-set head off
-set echo off
-set pagesize 0
-set verify off
-set feedback off
-select dbms_metadata.get_ddl('TABLE','EMPLOYEES','ORCL_USER') from dual;
-exit
-
-
-# Connect to Oracle XE 11g Target
-sqlplus "sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))" as sysdba
-sqlplus "orcl_user/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))"
-
-SELECT DISTINCT OBJECT_NAME FROM DBA_OBJECTS WHERE OBJECT_TYPE = 'TABLE' AND OWNER = 'ORCL_USER';
-
+SET LINESIZE 4000
 select count(1) from CONSULTANTS;
-select * from CONSULTANTS;
-select ID, FIRST_NAME, LAST_NAME, RATE from CONSULTANTS;
+select ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT from CONSULTANTS;
 
 insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Saurav', 'Mitra', 'saurav.mitra@ashnik.com', 5000.00, 'perm');
 commit;
@@ -38,24 +21,51 @@ insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Ti
 commit;
 delete from CONSULTANTS where EMAIL='tim.smith@freelance.com';
 commit;
+
+select count(1) from employees;
+set long 100000
+set head off
+set echo off
+set pagesize 0
+set verify off
+set feedback off
+select dbms_metadata.get_ddl('TABLE','EMPLOYEES','ORCL_USER') from dual;
+
 exit
-#################################
 
 
-##################
+# Connect to Oracle XE 11g Target
+sqlplus "sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))" as sysdba
+sqlplus "orcl_user/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))"
+
+SELECT DISTINCT OBJECT_NAME FROM DBA_OBJECTS WHERE OBJECT_TYPE = 'TABLE' AND OWNER = 'ORCL_USER';
+
+SELECT DISTINCT OBJECT_NAME FROM DBA_OBJECTS WHERE OBJECT_TYPE = 'TABLE' AND OWNER = 'ORCL_USER';
+DROP TABLE TGT_CONSULTANTS;
+CREATE TABLE "ORCL_USER"."TGT_CONSULTANTS"("ID" NUMBER(10) NOT NULL PRIMARY KEY,"FIRST_NAME" VARCHAR(50),"LAST_NAME" VARCHAR(50),"EMAIL" VARCHAR(50),"RATE" NUMBER(8,2),"STATUS" VARCHAR(20),"CREATED_AT" timestamp DEFAULT CURRENT_TIMESTAMP,"UPDATED_AT" timestamp NOT NULL);
+
+SET LINESIZE 4000
+select count(1) from TGT_CONSULTANTS;
+select ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT from TGT_CONSULTANTS;
+
+exit
+##########################################
+
+
+##########################################
 # Connect to Mysql
 mysql -u root -h 127.0.0.1 -p${oracle_password}
 use sales;
 select count(1) from product;
 desc product;
 exit
-##################
+##########################################
 
 
-#####################
-# Connect to Postgres
+##########################################
+# Connect to Postgres Source
 source ~/.bash_profile
-psql -U postgres -h 127.0.0.1
+psql -U postgres -h 127.0.0.1 -p 5432
 \l
 \d
 \dn
@@ -64,22 +74,39 @@ psql -U postgres -h 127.0.0.1
 \d+ "EMPLOYEES"
 SELECT column_name, data_type, character_maximum_length, is_nullable FROM information_schema.columns WHERE table_name = 'EMPLOYEES' order by ordinal_position;
 SELECT * FROM "EMPLOYEES";
+
+select count(1) from consultants;
+select * from consultants;
+SELECT column_name, data_type, character_maximum_length, is_nullable FROM information_schema.columns WHERE table_name = 'consultants' order by ordinal_position;
+
+insert into consultants (first_name, last_name, email, rate, status) values ('Saurav', 'Mitra', 'saurav.mitra@ashnik.com', 5000.00, 'perm');
+update consultants set rate=6100.25 where email='saurav.mitra@ashnik.com';
+insert into consultants (first_name, last_name, email, rate, status) values ('Tim', 'Smith', 'tim.smith@freelance.com', 3500.70, 'contract');
+delete from consultants where email='tim.smith@freelance.com';
 \q
-#####################
+
+# Connect to Postgres Target
+source ~/.bash_profile
+psql -U postgres -h 127.0.0.1 -p 5433
+select count(1) from consultants;
+select * from consultants;
+\q
+##########################################
 
 
-####################
+##########################################
 # Connect to MongoDB
 mongo 127.0.0.1:27017/admin -u root -p ${oracle_password}
 show dbs
 use admin
 show collections
-db.products.find()
+db.consultants.drop()
+db.consultants.find()
 exit
-####################
+##########################################
 
 
-##################
+##########################################
 # Connect to Redis
 redis-cli -h 127.0.0.1 -p 6379 -a ${oracle_password}
 keys *
@@ -88,24 +115,31 @@ get key1
 exit
 # To connect redis database 3
 redis-cli -h 127.0.0.1 -p 6379 -a ${oracle_password} -n 3
-##################
+##########################################
 
 
-##########################
+##########################################
 # Connect to Elasticsearch
 curl -XGET -u elastic:${oracle_password} http://127.0.0.1:9200/_cat/health
 curl -XGET -u elastic:${oracle_password} http://127.0.0.1:9200/_cat/indices
 curl -XGET -u elastic:${oracle_password} http://127.0.0.1:9200/product?pretty=true
 curl -XGET -u elastic:${oracle_password} http://127.0.0.1:9200/product/_search?pretty=true
 curl -XDELETE -u elastic:${oracle_password} http://127.0.0.1:9200/product?pretty=true
-##########################
+##########################################
 
 
-#################
+##########################################
+# Connect to RabbitMQ
+http://10.0.1.100:15672
+with username rabbitmq & password ${oracle_password}
+##########################################
+
+
+##########################################
 # Docker Commands
 docker images
 docker container ls -a
 docker container stop mongodb_mongo_1
 docker rm -f mongodb_mongo_1 
 docker image rm mongo
-#################
+##########################################

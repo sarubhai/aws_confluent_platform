@@ -1,0 +1,30 @@
+# Confluent Admin REST API
+# The Confluent Admin REST APIs allow users to perform admin operations via a series of REST APIs.
+# Reference: https://docs.confluent.io/platform/current/kafka-rest/api.html
+
+# Clusters: List and describe
+https://10.0.1.20:8090/kafka/v3/clusters
+
+
+# Brokers: List and describe
+https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/brokers
+
+
+# Topics: Create, delete, list and describe
+https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/topics
+
+
+# Configurations (cluster-, broker- and topic-level): Create, delete, list and describe
+https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/broker-configs
+
+
+# ACLs: Create, delete, list and describe
+https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/acls
+
+
+# Consumer groups: Delete, list and describe
+https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/consumer-groups
+
+
+# Partition reassignments: List and describe
+https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}

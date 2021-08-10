@@ -63,7 +63,7 @@ docker-compose up -d
 # Spawn Oracle Target Container
 mkdir /root/oracle_tgt
 cd /root/oracle_tgt
-sudo tee /root/oracle_src/docker-compose.yml &>/dev/null <<EOF
+sudo tee /root/oracle_tgt/docker-compose.yml &>/dev/null <<EOF
 version: "3"
 services:
   oracle_tgt:
@@ -140,11 +140,12 @@ sudo yum -y install mysql
 # Spawn MySQL/MaraiDB Container
 mkdir /root/mariadb
 cd /root/mariadb
+# image: mariadb:latest
 sudo tee /root/mariadb/docker-compose.yml &>/dev/null <<EOF
 version: "3.1"
 services:
   mariadb:
-    image: mariadb:latest
+    image: mysql:5.7
     ports:
       - 3306:3306
     environment:
@@ -157,7 +158,7 @@ EOF
 
 docker-compose up -d
 # MySQL Source Database
-sleep 60;
+sleep 30;
 
 curl -L https://s3-ap-southeast-1.amazonaws.com/dwbi-datalake/dataset/showroom.sql -o showroom.sql
 curl -L https://s3-ap-southeast-1.amazonaws.com/dwbi-datalake/dataset/customer.sql -o customer.sql
@@ -180,13 +181,13 @@ mysql --host=127.0.0.1 --port=3306 --user root -p${oracle_password} -e "alter ta
 
 # Install PostgreSQL Client
 sudo yum -y install postgresql
-# Spawn PostgreSQL Container
-mkdir /root/postgres
-cd /root/postgres
-sudo tee /root/postgres/docker-compose.yml &>/dev/null <<EOF
+# Spawn PostgreSQL Source Container
+mkdir /root/postgres_src
+cd /root/postgres_src
+sudo tee /root/postgres_src/docker-compose.yml &>/dev/null <<EOF
 version: "3.1"
 services:
-  postgres:
+  postgres_src:
     image: postgres:latest
     ports:
       - 5432:5432
@@ -199,10 +200,43 @@ services:
 EOF
 
 docker-compose up -d
-# PostgreSQL Database
 echo "PGPASSWORD=${oracle_password}" >> ~/.bash_profile 
 echo 'export PGPASSWORD' >> ~/.bash_profile
 source ~/.bash_profile
+# PostgreSQL Source Database
+sleep 30;
+
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "CREATE TABLE consultants(id SERIAL NOT NULL PRIMARY KEY,first_name VARCHAR(50),last_name VARCHAR(50),email VARCHAR(50),rate NUMERIC(8,2),status VARCHAR(20),created_at timestamp without time zone default (now() at time zone 'utc') NOT NULL,updated_at timestamp without time zone default (now() at time zone 'utc') NOT NULL);"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('John', 'Doe', 'john.doe@gmail.com', 3000.00, 'perm');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('Tom', 'Hanks', 'tom.hanks@yahoo.com', 3500.75, 'contract');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('Jane', 'Doe', 'jane.doe@moneybank.com', 3500.75, 'perm');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('Duke', 'Johnson', 'duke@hello.com', 4500.25, 'contract');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('Peter', 'Parker', 'peter@gmail.com', 4500.25, 'contract');"
+
+
+# Spawn PostgreSQL Target Container
+mkdir /root/postgres_tgt
+cd /root/postgres_tgt
+sudo tee /root/postgres_tgt/docker-compose.yml &>/dev/null <<EOF
+version: "3.1"
+services:
+  postgres_tgt:
+    image: postgres:latest
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_PASSWORD: ${oracle_password}
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+EOF
+
+docker-compose up -d
+# PostgreSQL Target Database
+sleep 30;
+
+psql -U postgres -h 127.0.0.1 -p 5433 -d postgres -c "CREATE TABLE consultants(id SERIAL NOT NULL PRIMARY KEY,first_name VARCHAR(50),last_name VARCHAR(50),email VARCHAR(50),rate NUMERIC(8,2),status VARCHAR(20),created_at timestamp NOT NULL,updated_at timestamp NOT NULL);"
 
 
 # Spawn Elasticsearch Container
@@ -290,9 +324,6 @@ services:
     ports:
       - 5672:5672
       - 15672:15672
-    environment:
-      RABBITMQ_DEFAULT_USER: rabbitmq
-      RABBITMQ_DEFAULT_PASS: ${oracle_password}
 EOF
 
 docker-compose up -d
