@@ -513,6 +513,23 @@ resource "aws_security_group" "database_sg" {
     cidr_blocks = [var.vpc_cidr_block]
   }
 
+  # Rabbit MQ
+  ingress {
+    description = "Rabbit MQ"
+    from_port   = 5672
+    to_port     = 5672
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr_block]
+  }
+
+  ingress {
+    description = "Rabbit MQ"
+    from_port   = 15672
+    to_port     = 15672
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr_block]
+  }
+
   ingress {
     from_port   = -1
     to_port     = -1

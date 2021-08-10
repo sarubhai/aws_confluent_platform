@@ -153,7 +153,9 @@ services:
       MYSQL_ROOT_PASSWORD: ${oracle_password}
     command:
     - --log-bin=binlog
-    - --binlog-format=ROW  
+    - --binlog-format=ROW
+    - --server-id=1
+    - --sql_mode=
 EOF
 
 docker-compose up -d

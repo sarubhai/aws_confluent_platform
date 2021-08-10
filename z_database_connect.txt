@@ -131,7 +131,7 @@ curl -XDELETE -u elastic:${oracle_password} http://127.0.0.1:9200/product?pretty
 ##########################################
 # Connect to RabbitMQ
 http://10.0.1.100:15672
-with username rabbitmq & password ${oracle_password}
+with username guest & password guest
 ##########################################
 
 
