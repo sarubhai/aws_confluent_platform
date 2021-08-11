@@ -2,29 +2,49 @@
 # The Confluent Admin REST APIs allow users to perform admin operations via a series of REST APIs.
 # Reference: https://docs.confluent.io/platform/current/kafka-rest/api.html
 
-# Clusters: List and describe
-https://10.0.1.20:8090/kafka/v3/clusters
+kafka_cluster='https://10.0.1.20:8090'
+
+# Kafka Clusters List
+curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters | jq
+
+cluster_id=`curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters | jq -r '.data[0].cluster_id'`
+
+# Kafka Brokers List
+curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/brokers | jq
 
 
-# Brokers: List and describe
-https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/brokers
+# Kafka Topics List
+curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics | jq
+curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics | jq | grep '.topic_name'
+curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics | jq | grep '.topic_name' | grep 'connect-'
 
+# Kafka Topic Create
+topic_name='pg-consultants'
+curl -s -k -X POST -H "Content-Type: application/json" ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics \
+  --data '{"topic_name": "pg-consultants", "partitions_count": 3, "replication_factor": 2, "configs": [{"name": "cleanup.policy", "value": "delete"},{"name": "retention.ms", "value": 3600000}]}' | jq
 
-# Topics: Create, delete, list and describe
-https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/topics
+# Kafka Topic Info
+curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics/${topic_name} | jq
+
+# kafka Topic Delete
+curl -s -k -X DELETE ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics/${topic_name} | jq
+
 
 
 # Configurations (cluster-, broker- and topic-level): Create, delete, list and describe
-https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/broker-configs
+curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/broker-configs | jq
 
 
 # ACLs: Create, delete, list and describe
-https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/acls
+curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/acls | jq
 
 
-# Consumer groups: Delete, list and describe
-https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/consumer-groups
+# Kafka Consumer Groups List
+curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/consumer-groups | jq
 
 
 # Partition reassignments: List and describe
-https://10.0.1.20:8090/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}
+# consumer_group_id='_confluent-controlcenter-6-1-0-1-command'
+# topic_name='_confluent-command'
+# partition_id=0
+# curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/consumer-groups/${consumer_group_id}/lags/${topic_name}/partitions/${partition_id} | jq

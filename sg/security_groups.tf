@@ -463,9 +463,17 @@ resource "aws_security_group" "database_sg" {
 
   # Postgres
   ingress {
-    description = "Postgres"
+    description = "Postgres Source"
     from_port   = 5432
     to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr_block]
+  }
+
+  ingress {
+    description = "Postgres Target"
+    from_port   = 5433
+    to_port     = 5433
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr_block]
   }

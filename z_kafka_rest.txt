@@ -1,52 +1,72 @@
 # The Kafka REST Proxy provides a RESTful interface to a Kafka cluster. 
-# It makes it easy to produce and consume messages, view the state of the cluster, and perform administrative actions 
-# without using the native Kafka protocol or clients
+# It makes it easy to produce and consume messages, view the state of the cluster, and perform administrative actions using standard HTTP(S)
+# without using the native TCP-based Kafka protocol or clients
+# Ref: https://github.com/confluentinc/kafka-rest
+# https://www.confluent.io/blog/http-and-rest-api-use-cases-and-architecture-with-apache-kafka/
 
-Ref:
-https://github.com/confluentinc/kafka-rest
+rest_proxy='https://10.0.1.70:8082'
 
-# Get a list of topics
-    $ curl "https://10.0.1.70:8082/topics"
+# Kafka Topics List
+curl -s -k -X GET ${rest_proxy}/topics | jq
+# ["connect-cluster-status", "connect-cluster-configs", "connect-cluster-offsets", "_schemas"]
+
+
+# Kafka Topic Info
+curl -s -k -X GET ${rest_proxy}/topics/_schemas | jq
+
+# Kafka Topic Create
+topic_name='pg-consultants'
+curl -s -k -X POST -H "Content-Type: application/vnd.kafka.v2+json" ${rest_proxy}/topics \
+  --data '{"topic_name": "pg-consultants", "partitions_count": 3, "replication_factor": 2, "configs": [{"name": "cleanup.policy", "value": "delete"},{"name": "retention.ms", "value": 3600000}]}' | jq
+
+# Kafka Topic Info
+curl -s -k -X GET ${rest_proxy}/${topic_name} | jq
+
+# kafka Topic Delete
+curl -s -k -X DELETE ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics/${topic_name} | jq
+
+
+
+
+# Create a topic
+$ curl -X POST "https://10.0.1.70:8082/clusters/{cluster_id}/topics" | jq
+
+
+
+  {"name":"jsontest","configs":{},"partitions":[{"partition":0,"leader":0,"replicas":[{"broker":0,"leader":true,"in_sync":true}]}]}
+
+# Produce a message with JSON data
+$ curl -X POST -H "Content-Type: application/vnd.kafka.json.v2+json" \
+      --data '{"records":[{"value":{"name": "testUser"}}]}' \
+      "https://10.0.1.70:8082/topics/jsontest"
       
-      ["__consumer_offsets","jsontest"]
+  {"offsets":[{"partition":0,"offset":3,"error_code":null,"error":null}],"key_schema_id":null,"value_schema_id":null}
 
-    # Get info about one topic
-    $ curl "https://10.0.1.70:8082/topics/jsontest"
-    
-      {"name":"jsontest","configs":{},"partitions":[{"partition":0,"leader":0,"replicas":[{"broker":0,"leader":true,"in_sync":true}]}]}
+# Create a consumer for JSON data, starting at the beginning of the topic's
+# log. The consumer group is called "my_json_consumer" and the instance is "my_consumer_instance".
 
-    # Produce a message with JSON data
-    $ curl -X POST -H "Content-Type: application/vnd.kafka.json.v2+json" \
-          --data '{"records":[{"value":{"name": "testUser"}}]}' \
-          "https://10.0.1.70:8082/topics/jsontest"
-          
-      {"offsets":[{"partition":0,"offset":3,"error_code":null,"error":null}],"key_schema_id":null,"value_schema_id":null}
-
-    # Create a consumer for JSON data, starting at the beginning of the topic's
-    # log. The consumer group is called "my_json_consumer" and the instance is "my_consumer_instance".
-    
-    $ curl -X POST -H "Content-Type: application/vnd.kafka.v2+json" -H "Accept: application/vnd.kafka.v2+json" \
-    --data '{"name": "my_consumer_instance", "format": "json", "auto.offset.reset": "earliest"}' \
-    https://10.0.1.70:8082/consumers/my_json_consumer
-          
-      {"instance_id":"my_consumer_instance","base_uri":"https://10.0.1.70:8082/consumers/my_json_consumer/instances/my_consumer_instance"}
+$ curl -X POST -H "Content-Type: application/vnd.kafka.v2+json" -H "Accept: application/vnd.kafka.v2+json" \
+--data '{"name": "my_consumer_instance", "format": "json", "auto.offset.reset": "earliest"}' \
+https://10.0.1.70:8082/consumers/my_json_consumer
       
-    # Subscribe the consumer to a topic
-    
-    $ curl -X POST -H "Content-Type: application/vnd.kafka.v2+json" --data '{"topics":["jsontest"]}' \
-    https://10.0.1.70:8082/consumers/my_json_consumer/instances/my_consumer_instance/subscription
-    # No content in response
-      
-    # Then consume some data from a topic using the base URL in the first response.
+  {"instance_id":"my_consumer_instance","base_uri":"https://10.0.1.70:8082/consumers/my_json_consumer/instances/my_consumer_instance"}
+  
+# Subscribe the consumer to a topic
 
-    $ curl -X GET -H "Accept: application/vnd.kafka.json.v2+json" \
-    https://10.0.1.70:8082/consumers/my_json_consumer/instances/my_consumer_instance/records
-      
-      [{"key":null,"value":{"name":"testUser"},"partition":0,"offset":3,"topic":"jsontest"}]
-   
-    # Finally, close the consumer with a DELETE to make it leave the group and clean up
-    # its resources.  
-    
-    $ curl -X DELETE -H "Accept: application/vnd.kafka.v2+json" \
-          https://10.0.1.70:8082/consumers/my_json_consumer/instances/my_consumer_instance
-      # No content in response
+$ curl -X POST -H "Content-Type: application/vnd.kafka.v2+json" --data '{"topics":["jsontest"]}' \
+https://10.0.1.70:8082/consumers/my_json_consumer/instances/my_consumer_instance/subscription
+# No content in response
+  
+# Then consume some data from a topic using the base URL in the first response.
+
+$ curl -X GET -H "Accept: application/vnd.kafka.json.v2+json" \
+https://10.0.1.70:8082/consumers/my_json_consumer/instances/my_consumer_instance/records
+  
+  [{"key":null,"value":{"name":"testUser"},"partition":0,"offset":3,"topic":"jsontest"}]
+
+# Finally, close the consumer with a DELETE to make it leave the group and clean up
+# its resources.  
+
+$ curl -X DELETE -H "Accept: application/vnd.kafka.v2+json" \
+      https://10.0.1.70:8082/consumers/my_json_consumer/instances/my_consumer_instance
+  # No content in response

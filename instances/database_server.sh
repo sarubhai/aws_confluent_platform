@@ -238,7 +238,7 @@ docker-compose up -d
 # PostgreSQL Target Database
 sleep 30;
 
-psql -U postgres -h 127.0.0.1 -p 5433 -d postgres -c "CREATE TABLE consultants(id SERIAL NOT NULL PRIMARY KEY,first_name VARCHAR(50),last_name VARCHAR(50),email VARCHAR(50),rate NUMERIC(8,2),status VARCHAR(20),created_at timestamp NOT NULL,updated_at timestamp NOT NULL);"
+psql -U postgres -h 127.0.0.1 -p 5433 -d postgres -c "CREATE TABLE consultants(id INTEGER NOT NULL PRIMARY KEY,first_name VARCHAR(50),last_name VARCHAR(50),email VARCHAR(50),rate NUMERIC(8,2),status VARCHAR(20),created_at timestamp without time zone NOT NULL,updated_at timestamp without time zone NOT NULL);"
 
 
 # Spawn Elasticsearch Container
