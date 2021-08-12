@@ -103,8 +103,8 @@ variable "database_instance" {
   default     = { instance_type : "t2.large", pvt_ip : "10.0.1.100" }
 }
 
-variable "oracle_password" {
-  description = "The Oracle Password."
+variable "db_password" {
+  description = "The Database Admin Password."
   default     = "Password123456"
 }
 

@@ -89,6 +89,8 @@ The Kafka Connect Plugins that will be installed during deployment from Confluen
 - ICMP
 - JMX 1099
 
+[*] Reserve the Jolokia ports only when you deploy Confluent Platform using Ansible.
+
 ### Prerequisite
 
 Terraform is already installed in local machine.
@@ -109,7 +111,7 @@ private_key = "-----BEGIN RSA PRIVATE KEY----- content -----END RSA PRIVATE KEY-
 
 keypair_name = "confluent-us-west-2"
 
-oracle_password = "Password123456"
+db_password = "Password123456"
 
 vpn_admin_password = "asdflkjhgqwerty1234"
 ```

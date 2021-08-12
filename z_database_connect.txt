@@ -1,13 +1,13 @@
 ##########################################
 # Set Password as used in terraform.tfvars
-oracle_password='Password'
+db_password='Password'
 ##########################################
 
 
 ##########################################
 # Connect to Oracle XE 11g Source
-sqlplus "sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))" as sysdba
-sqlplus "orcl_user/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))"
+sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))" as sysdba
+sqlplus "orcl_user/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))"
 
 SET LINESIZE 4000
 select count(1) from CONSULTANTS;
@@ -23,6 +23,8 @@ delete from CONSULTANTS where EMAIL='tim.smith@freelance.com';
 commit;
 insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Shane', 'Wilson', 'shane.wilson@freelance.com', 5000.00, 'perm');
 commit;
+insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('John', 'Sinha', 'john.sinha@freelance.com', 9000.00, 'contract');
+commit;
 
 select count(1) from employees;
 set long 100000
@@ -37,8 +39,8 @@ exit
 
 
 # Connect to Oracle XE 11g Target
-sqlplus "sys/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))" as sysdba
-sqlplus "orcl_user/${oracle_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))"
+sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))" as sysdba
+sqlplus "orcl_user/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))"
 
 SET LINESIZE 4000
 SELECT DISTINCT OBJECT_NAME FROM DBA_OBJECTS WHERE OBJECT_TYPE = 'TABLE' AND OWNER = 'ORCL_USER';
@@ -51,13 +53,17 @@ select * from EMPLOYEES1;
 select count(1) from CONSULTANTS;
 select ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT from CONSULTANTS;
 
+select count(1) from CONSULTANTS1;
+select ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT from CONSULTANTS1;
+
 exit
 ##########################################
 
 
 ##########################################
 # Connect to Mysql
-mysql -u root -h 127.0.0.1 -p${oracle_password}
+mysql -u root -h 127.0.0.1 -p${db_password}
+SELECT table_schema, table_name FROM INFORMATION_SCHEMA.tables WHERE TABLE_SCHEMA NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys');
 use sales;
 select count(1) from product;
 desc product;
@@ -98,36 +104,39 @@ select * from consultants;
 
 
 ##########################################
+# Connect to Elasticsearch
+curl -XGET -u elastic:${db_password} http://127.0.0.1:9200/_cat/health
+curl -XGET -u elastic:${db_password} http://127.0.0.1:9200/_cat/indices
+curl -XGET -u elastic:${db_password} http://127.0.0.1:9200/product?pretty=true
+curl -XGET -u elastic:${db_password} http://127.0.0.1:9200/product/_search?pretty=true
+curl -XDELETE -u elastic:${db_password} http://127.0.0.1:9200/product?pretty=true
+
+GET _cat/indices
+GET consultants/_search
+##########################################
+
+
+##########################################
 # Connect to MongoDB
-mongo 127.0.0.1:27017/admin -u root -p ${oracle_password}
+mongo 127.0.0.1:27017/admin -u root -p ${db_password}
 show dbs
-use admin
+use sales
 show collections
-db.consultants.drop()
-db.consultants.find()
+db.products.find()
+db.products.drop()
 exit
 ##########################################
 
 
 ##########################################
 # Connect to Redis
-redis-cli -h 127.0.0.1 -p 6379 -a ${oracle_password}
+redis-cli -h 127.0.0.1 -p 6379 -a ${db_password}
 keys *
 set key1 10
 get key1
 exit
 # To connect redis database 3
-redis-cli -h 127.0.0.1 -p 6379 -a ${oracle_password} -n 3
-##########################################
-
-
-##########################################
-# Connect to Elasticsearch
-curl -XGET -u elastic:${oracle_password} http://127.0.0.1:9200/_cat/health
-curl -XGET -u elastic:${oracle_password} http://127.0.0.1:9200/_cat/indices
-curl -XGET -u elastic:${oracle_password} http://127.0.0.1:9200/product?pretty=true
-curl -XGET -u elastic:${oracle_password} http://127.0.0.1:9200/product/_search?pretty=true
-curl -XDELETE -u elastic:${oracle_password} http://127.0.0.1:9200/product?pretty=true
+redis-cli -h 127.0.0.1 -p 6379 -a ${db_password} -n 3
 ##########################################
 
 

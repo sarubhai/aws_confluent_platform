@@ -33,7 +33,7 @@ data "aws_ami" "database_centos" {
 # User Data Init
 data "template_file" "database_init_script" {
   template = templatefile("${path.module}/database_server.sh", {
-    oracle_password = var.oracle_password
+    db_password = var.db_password
   })
 }
 

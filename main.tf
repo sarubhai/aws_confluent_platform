@@ -51,7 +51,7 @@ module "instances" {
   keypair_name              = var.keypair_name
   private_key               = var.private_key
   database_instance         = var.database_instance
-  oracle_password           = var.oracle_password
+  db_password               = var.db_password
 }
 
 

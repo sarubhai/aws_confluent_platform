@@ -106,6 +106,6 @@ variable "database_instance" {
   description = "The Database Server Instance."
 }
 
-variable "oracle_password" {
-  description = "The Oracle Password."
+variable "db_password" {
+  description = "The Database Admin Password."
 }
