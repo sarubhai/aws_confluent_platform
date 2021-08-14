@@ -315,6 +315,39 @@ systemctl enable redis
 systemctl restart redis
 
 
+# Install MSSQL CLI Client
+sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+curl https://packages.microsoft.com/config/rhel/7/prod.repo > /etc/yum.repos.d/msprod.repo
+sudo yum -y install libunwind
+sudo yum -y install mssql-cli
+# Spawn MSSQL Container
+mkdir /root/mssql
+cd /root/mssql
+sudo tee /root/mssql/docker-compose.yml &>/dev/null <<EOF
+version: "3.1"
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: mssql
+    ports:
+      - 1433:1433
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: ${db_password}
+      MSSQL_PID: Developer
+      MSSQL_AGENT_ENABLED: "true"
+EOF
+
+docker-compose up -d
+# MSSQL Source Database
+sleep 60;
+curl -L https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorksLT2019.bak -o AdventureWorksLT2019.bak
+sudo docker cp AdventureWorksLT2019.bak mssql:/AdventureWorksLT2019.bak
+mssql-cli -S localhost -U sa -P ${db_password} -Q "RESTORE DATABASE [AdventureWorks] FROM DISK='/AdventureWorksLT2019.bak' WITH MOVE 'AdventureWorksLT2012_Data' TO '/var/opt/mssql/data/AdventureWorks.mdf', MOVE 'AdventureWorksLT2012_Log' TO '/var/opt/mssql/data/AdventureWorks_log.ldf'"
+mssql-cli -S localhost -U sa -P ${db_password} -Q "USE adventureworks; EXEC sp_changedbowner 'sa'; EXEC sys.sp_cdc_enable_db;"
+mssql-cli -S localhost -U sa -P ${db_password} -d adventureworks -Q "EXEC sys.sp_cdc_enable_table @source_schema = 'saleslt', @source_name = 'product', @role_name = NULL, @supports_net_changes = 0;"
+
+
 # Spawn RabbitMQ Container
 mkdir /root/rabbitmq
 cd /root/rabbitmq

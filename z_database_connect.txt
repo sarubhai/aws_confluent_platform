@@ -1,8 +1,9 @@
-##########################################
+# Name: z_database_connect.txt
+# Owner: Saurav Mitra
+# Description: Commands to connect & interact to multiple Databases.
+
 # Set Password as used in terraform.tfvars
 db_password='Password'
-##########################################
-
 
 ##########################################
 # Connect to Oracle XE 11g Source
@@ -92,6 +93,9 @@ insert into consultants (first_name, last_name, email, rate, status) values ('Sa
 update consultants set rate=6100.25 where email='saurav.mitra@ashnik.com';
 insert into consultants (first_name, last_name, email, rate, status) values ('Tim', 'Smith', 'tim.smith@freelance.com', 3500.70, 'contract');
 delete from consultants where email='tim.smith@freelance.com';
+insert into consultants (first_name, last_name, email, rate, status) values ('Shane', 'Wilson', 'shane.wilson@freelance.com', 5000.00, 'perm');
+insert into consultants (first_name, last_name, email, rate, status) values ('John', 'Sinha', 'john.sinha@freelance.com', 9000.00, 'contract');
+
 \q
 
 # Connect to Postgres Target
@@ -130,20 +134,32 @@ exit
 
 ##########################################
 # Connect to Redis
+# redis-cli -h 127.0.0.1 -p 6379 -a ${db_password} -n 1
 redis-cli -h 127.0.0.1 -p 6379 -a ${db_password}
+select 1
 keys *
 set key1 10
 get key1
 exit
-# To connect redis database 3
-redis-cli -h 127.0.0.1 -p 6379 -a ${db_password} -n 3
+##########################################
+
+
+##########################################
+# Connect to MSSQL
+mssql-cli -S localhost -U sa -P ${db_password} -d AdventureWorks -Q "\lt"
+mssql-cli -S localhost -U sa -P ${db_password} -d AdventureWorks -Q "select count(1) from SalesLT.Product"
+
+mssql-cli -S localhost -U sa -P ${db_password} -d AdventureWorks 
+select * from SalesLT.Product;
+
+exit
 ##########################################
 
 
 ##########################################
 # Connect to RabbitMQ
 http://10.0.1.100:15672
-with username guest & password guest
+with username rabbitmq & password ${db_password}
 ##########################################
 
 
@@ -154,4 +170,6 @@ docker container ls -a
 docker container stop mongodb_mongo_1
 docker rm -f mongodb_mongo_1 
 docker image rm mongo
+docker exec -it mssql bash
+docker exec -it mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${db_password}
 ##########################################

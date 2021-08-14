@@ -1,3 +1,7 @@
+# Name: z_kafka_connect.txt
+# Owner: Saurav Mitra
+# Description: Kafka Connect Quick Reference
+
 ############
 # JDBC JAR's
 ############
@@ -17,6 +21,11 @@ tar -xvf mysql-connector-java-8.0.25.tar.gz
 mv /usr/share/java/kafka-connect-jdbc/mysql-connector-java-8.0.25/mysql-connector-java-8.0.25.jar /usr/share/java/kafka-connect-jdbc/mysql-connector-java-8.0.25.jar
 rm -rf mysql-connector-java-8.0.25.tar.gz mysql-connector-java-8.0.25
 
+# MSSQL
+
+curl -L -s https://download.microsoft.com/download/b/c/5/bc5e407f-97ff-42ea-959d-12f2391063d7/sqljdbc_9.4.0.0_enu.tar.gz -o sqljdbc_9.4.0.0_enu.tar.gz
+tar -xvf sqljdbc_9.4.0.0_enu.tar.gz
+rm -rf sqljdbc_9.4.0.0_enu.tar.gz
 #################
 # Kafka Connector
 #################

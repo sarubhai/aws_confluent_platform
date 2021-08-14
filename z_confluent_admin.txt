@@ -1,6 +1,8 @@
-# Confluent Admin REST API
+# Name: z_confluent_admin.txt
+# Owner: Saurav Mitra
+# Description: Confluent Admin REST API examples.
 # The Confluent Admin REST APIs allow users to perform admin operations via a series of REST APIs.
-# Reference: https://docs.confluent.io/platform/current/kafka-rest/api.html
+# https://docs.confluent.io/platform/current/kafka-rest/api.html
 
 kafka_cluster='https://10.0.1.20:8090'
 
