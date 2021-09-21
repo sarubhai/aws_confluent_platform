@@ -1,0 +1,362 @@
+# Name: z_confluent_cli_tools.txt
+# Owner: Saurav Mitra
+# Description: Confluent CLI tools usage examples.
+
+
+####################
+# 1. zookeeper-shell
+####################
+## This tool connects to the ZooKeeper shell to access Kafka’s data in ZooKeeper
+
+# Without TLS
+zookeeper_1='10.0.1.10:2181'
+
+# With TLS
+zookeeper_1='10.0.1.10:2182'
+sudo tee /tmp/zookeeper_ssl.properties &>/dev/null <<EOF
+zookeeper.ssl.client.enable = true
+zookeeper.clientCnxnSocket = org.apache.zookeeper.ClientCnxnSocketNetty
+zookeeper.ssl.keystore.location = /var/ssl/private/zookeeper.keystore.jks
+zookeeper.ssl.keystore.password = confluentkeystorestorepass
+zookeeper.ssl.truststore.location = /var/ssl/private/zookeeper.truststore.jks
+zookeeper.ssl.truststore.password = confluenttruststorepass
+EOF
+
+
+# Connect to Shell
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties
+exit
+
+# View the directory structure in ZooKeeper
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties ls /
+# [admin, brokers, cluster, config, consumers, controller, controller_epoch, feature, isr_change_notification, latest_producer_id_block, log_dir_event_notification, zookeeper]
+
+# Cluster ID
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties get /cluster/id
+
+# Kafka Configs
+# zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties ls /config
+# [brokers, changes, clients, cluster-links, topics, users]
+
+# Topics Config
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties ls /config/topics
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties get /config/topics/__consumer_offsets
+# {"version":1,"config":{"segment.bytes":"104857600","compression.type":"producer","cleanup.policy":"compact","confluent.placement.constraints":""}}
+
+# Kafka Brokers that have registered with ZooKeeper
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties ls /brokers
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties ls /brokers/ids
+# [1,2,3]
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties get /brokers/ids/1
+
+
+# Controller & Controller Epoch
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties get /controller
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties get /controller_epoch
+
+# Show all the topics that exist in the cluster
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties ls /brokers/topics
+# Show details of a specific topic
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties get /brokers/topics/__consumer_offsets
+# Brokers Topic Partitions
+zookeeper-shell ${zookeeper_1} -zk-tls-config-file /tmp/zookeeper_ssl.properties get /brokers/topics/__consumer_offsets/partitions/0/state
+
+
+
+#################
+# 2. kafka-topics
+#################
+## This tool connects to the Kafka to manage Topic
+
+# Without TLS
+kafka_1='10.0.1.20:9092'
+
+# With TLS
+# cat  /home/centos/cp-ansible/cp-ansible-log.txt | grep secrets_protection_masterkey
+kafka_1='ip-10-0-1-20.us-west-2.compute.internal:9092'
+export CONFLUENT_SECURITY_MASTER_KEY='tvvQtzwLh6hEffyPvcDsI6O9LMJMM5j8vBBFkxNijqs='
+
+sudo tee /tmp/kafka_ssl.properties &>/dev/null <<EOF
+# security.protocol = SSL
+security.protocol = SASL_SSL
+sasl.mechanism = PLAIN
+sasl.jaas.config = org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password=\${securepass:/var/ssl/private/security.properties:server.properties/kafka.rest.client.sasl.jaas.config/org.apache.kafka.common.security.plain.PlainLoginModule/password};
+ssl.truststore.location = /var/ssl/private/kafka_broker.truststore.jks
+ssl.truststore.password = \${securepass:/var/ssl/private/security.properties:server.properties/confluent.ssl.truststore.password}
+config.providers = securepass
+config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+EOF
+
+
+# Display Kafka version
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --version
+# 6.1.0-ce (Commit:d19b95317d02f231)
+
+# List Topics
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --list
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --list --exclude-internal
+
+# List Topics with configuration overrides
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --describe --topics-with-overrides
+# Find all the partitions where one or more of the replicas for the partition are not in-sync with the leader
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --describe --under-replicated-partitions
+
+# Create Topic
+topic_name='random-topic'
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --create --topic ${topic_name} --partitions 2 --replication-factor 3
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --create --topic ${topic_name} --partitions 2 --replication-factor 3 --if-not-exists
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --create --topic ${topic_name} --partitions 2 --replication-factor 3 --if-not-exists --config min.insync.replicas=2 cleanup.policy=compact
+# kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --create --topic ${topic_name} --replica-assignment 1:2,2:1,1:2,2:1,1:2,2:1
+
+# Show Topic
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --describe --topic ${topic_name}
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --describe --topic ${topic_name} --topics-with-overrides
+
+# Change Topic Partition Numbers
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --alter --topic ${topic_name} --partitions 5
+
+# Change Topic Retention Time
+# kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --alter --topic ${topic_name} --config retention.ms=259200000
+
+# Purge a Topic
+# kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --alter --topic ${topic_name} --add-config retention.ms=0
+# kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --alter --topic ${topic_name} --delete-config retention.ms
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --alter --topic ${topic_name} --add-config retention.ms=0
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --alter --topic ${topic_name} --delete-config retention.ms
+
+
+# Delete Topic
+kafka-topics --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --delete --topic ${topic_name}
+
+
+
+################
+# kafka-configs
+################
+## This tool helps to manipulate and describe entity config (Dynamic changes) for a topic, client, user, broker, or cluster link.
+
+# Display dynamic Broker configurations for Brokers
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --entity-type brokers --describe
+# Display dynamic Broker configurations for Broker with Broker ID 3
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --broker 3 --describe
+# Display all Broker configurations for Broker with Broker ID 3
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --broker 3 --describe --all
+# Change a Broker configuration
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --broker 3 --alter --add-config log.cleaner.threads=2
+# Delete a Broker configuration
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --broker 3 --alter --delete-config log.cleaner.threads
+# Change a cluster-wide default configuration
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --broker-defaults --alter --add-config log.cleaner.threads=2
+# Display dynamic configurations for a Topic
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --topic ${topic_name} --describe
+# Quotas can be defined by network bandwidth or request rate
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --client-defaults --alter --add-config 'producer_byte_rate=1024,consumer_byte_rate=1024'
+# Request rate quota override for a specific client-id, user, or user and client-id pair
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --client clientA --user user1 --alter --add-config 'request_percentage=50'
+# To describe the quota for a specific user and client-id pair
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --client clientA --user user1 --describe
+# Create credentials for inter-Broker/Broker-client communication (user “admin”)
+kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --user admin --alter --add-config 'SCRAM-SHA-256=[password=admin-secret],SCRAM-SHA-512=[password=adminsecret]'
+# Producer: Grant Write on the Topic, Create on the Cluster
+
+# To alter multiple config settings
+# kafka-configs --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --broker-defaults --alter --add-config-file /tmp/new.properties
+
+############
+# kafka-acls
+############
+kafka-acls --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --producer --add --allow-principal User:Bob --topic my_topic
+# Consumer: Grant Read on the Topic, Read on the ConsumerGroup
+kafka-acls --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --consumer --add --allow-principal User:Bob --topic my_topic --group group1
+# Allow user Bob to produce to any Topic whose name starts with "Test-"
+kafka-acls --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --producer --add --allow-principal User:Bob --topic Test- --resource-pattern-type prefixed
+# List all ACLs for the topic Test-topic
+kafka-acls --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --list --topic Test-topic --resource-pattern-type match
+# Allow all users except BadBob and all hosts except 198.51.100.3 to read from Testtopic
+kafka-acls --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --add --allow-principal User:'*' --operation Read --topic Test-topic --allow-host '*' --deny-principal User:BadBob --deny-host 198.51.100.3
+
+
+
+############################
+# kafka-reassign-partitions
+############################
+## This tool helps to move topic partitions between replicas.
+
+sudo tee /tmp/reassignment.json &>/dev/null <<EOF
+{
+    "version":1,
+    "partitions":[
+        {"topic":"${topic_name}","partition":0,"replicas":[1,2,3]},
+        {"topic":"${topic_name}","partition":1,"replicas":[1,2,3]},
+        {"topic":"${topic_name}","partition":2,"replicas":[2,3]}
+    ]
+}
+EOF
+
+
+kafka-reassign-partitions --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --reassignment-json-file /tmp/reassignment.json --zookeeper ${zookeeper_1} --execute
+# Successfully started partition reassignments for random-topic-0,random-topic-1,random-topic-2
+
+kafka-reassign-partitions --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties --reassignment-json-file /tmp/reassignment.json --verify
+
+
+
+######################
+# confluent-rebalancer
+######################
+## 
+
+confluent-rebalancer execute --bootstrap-server ${kafka_1} --metrics-bootstrap-server ${kafka_1},${kafka_2} --throttle 1000000 --verbose --force
+confluent-rebalancer status --bootstrap-server ${kafka_1} --command-config /tmp/kafka_ssl.properties
+
+
+
+###########################
+# 3. kafka-console-producer
+###########################
+## Console program to produce messages to Kafka Topic
+
+# Without TLS
+kafka_1='10.0.1.20:9092'
+
+# With TLS
+# cat  /home/centos/cp-ansible/cp-ansible-log.txt | grep secrets_protection_masterkey
+kafka_1='ip-10-0-1-20.us-west-2.compute.internal:9092'
+export CONFLUENT_SECURITY_MASTER_KEY='tvvQtzwLh6hEffyPvcDsI6O9LMJMM5j8vBBFkxNijqs='
+
+sudo tee /tmp/kafka_ssl.properties &>/dev/null <<EOF
+# security.protocol = SSL
+security.protocol = SASL_SSL
+sasl.mechanism = PLAIN
+sasl.jaas.config = org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password=\${securepass:/var/ssl/private/security.properties:server.properties/kafka.rest.client.sasl.jaas.config/org.apache.kafka.common.security.plain.PlainLoginModule/password};
+ssl.truststore.location = /var/ssl/private/kafka_broker.truststore.jks
+ssl.truststore.password = \${securepass:/var/ssl/private/security.properties:server.properties/confluent.ssl.truststore.password}
+config.providers = securepass
+config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+EOF
+
+
+# Display Kafka version
+kafka-console-producer --bootstrap-server ${kafka_1} --producer.config /tmp/kafka_ssl.properties --version
+# 6.1.0-ce (Commit:d19b95317d02f231)
+
+# Produce Messages
+kafka-console-producer --bootstrap-server ${kafka_1} --producer.config /tmp/kafka_ssl.properties --topic ${topic_name}
+hello
+world
+Press Ctrl+C to exit
+
+# kafka-console-producer --bootstrap-server ${kafka_1} --producer.config /tmp/kafka_ssl.properties --topic ${topic_name} --property acks=all
+
+# Produce Messages from file
+seq 1 20 > /tmp/numlist
+kafka-console-producer --bootstrap-server ${kafka_1} --producer.config /tmp/kafka_ssl.properties --topic ${topic_name} --sync < /tmp/numlist
+
+# Produce Message With Key & Value
+kafka-console-producer --bootstrap-server ${kafka_1} --producer.config /tmp/kafka_ssl.properties --topic ${topic_name} --property parse.key=true --property key.separator=,
+1,hello
+2,world
+Press Ctrl+C to exit
+
+
+
+##########################
+# kafka-producer-perf-test
+##########################
+## Produce Messages to Topic for Performance Testing
+
+# Generate 2000000 messages, 1000 bytes in size, at a rate of 1000000000 messages/sec
+kafka-producer-perf-test --producer-props bootstrap.servers=${kafka_1} acks=1 batch.size=400000 linger.ms=500 --producer.config /tmp/kafka_ssl.properties --topic ${topic_name} --num-records 2000000 --record-size 1000 --throughput 1000000000 
+
+
+
+###########################
+# 3. kafka-console-consumer
+###########################
+## Console program to consume messages from Kafka Topic
+
+# Without TLS
+kafka_1='10.0.1.20:9092'
+
+# With TLS
+# cat  /home/centos/cp-ansible/cp-ansible-log.txt | grep secrets_protection_masterkey
+kafka_1='ip-10-0-1-20.us-west-2.compute.internal:9092'
+export CONFLUENT_SECURITY_MASTER_KEY='tvvQtzwLh6hEffyPvcDsI6O9LMJMM5j8vBBFkxNijqs='
+
+sudo tee /tmp/kafka_ssl.properties &>/dev/null <<EOF
+# security.protocol = SSL
+security.protocol = SASL_SSL
+sasl.mechanism = PLAIN
+sasl.jaas.config = org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password=\${securepass:/var/ssl/private/security.properties:server.properties/kafka.rest.client.sasl.jaas.config/org.apache.kafka.common.security.plain.PlainLoginModule/password};
+ssl.truststore.location = /var/ssl/private/kafka_broker.truststore.jks
+ssl.truststore.password = \${securepass:/var/ssl/private/security.properties:server.properties/confluent.ssl.truststore.password}
+config.providers = securepass
+config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+EOF
+
+
+# Display Kafka version
+kafka-console-consumer --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --version
+# 6.1.0-ce (Commit:d19b95317d02f231)
+
+# Consume Messages [Press Ctrl+C to exit]
+kafka-console-consumer --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --topic ${topic_name} --from-beginning
+kafka-console-consumer --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --topic ${topic_name} --from-beginning --consumer-property group.id=test-cg
+kafka-console-consumer --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --topic ${topic_name} --from-beginning --partition 0
+kafka-console-consumer --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --topic ${topic_name} --from-beginning --formatter kafka.tools.DefaultMessageFormatter --property print.key=true --property print.value=true
+# kafka-console-consumer --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --topic __consumer_offsets --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" | grep ${topic_name}
+
+
+
+########################
+# kafka-consumer-groups
+########################
+## Consumer Group metadata
+
+kafka-consumer-groups --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --list
+kafka-consumer-groups --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --group test-cg --describe --state
+kafka-consumer-groups --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --group test-cg --reset-offsets --to-earliest --topic ${topic_name} --execute
+kafka-consumer-groups --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --group test-cg --reset-offsets --to-offset 100 --topic ${topic_name}:0 --execute
+kafka-consumer-groups --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --group test-cg --reset-offsets --shift-by -2 --topic ${topic_name}:0 --execute
+kafka-consumer-groups --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --group test-cg --reset-offsets --shift-by 2 --topic ${topic_name}:0 --execute
+kafka-consumer-groups --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --group test-cg --reset-offsets --to-datetime 2017-08-01T17:14:23.933 --topic dc1-topic --execute
+
+
+
+##########################
+# kafka-consumer-perf-test
+##########################
+## Consume Messages from Topic for Performance Testing
+
+kafka-consumer-perf-test --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --topic ${topic_name} --group test-group --show-detailed-stats --timeout 1000000 --reporting-interval 5000 --messages 10000000 --threads 1
+
+
+echo "interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor" > /tmp/consumer.properties
+# echo "fetch.min.bytes=10485760" >> /tmp/consumer.properties
+
+kafka-consumer-perf-test --bootstrap-server ${kafka_1} --consumer.config /tmp/kafka_ssl.properties --topic ${topic_name} --group test-group --show-detailed-stats --timeout 1000000 --reporting-interval 5000 --messages 10000000 --threads 1 --consumer.config /tmp/consumer.properties
+
+
+
+
+########
+# Others
+########
+## 
+
+# 
+kafka-dump-log --print-data-log --files /var/lib/kafka/data/${topic_name}-0/00000000000000000000.log
+# | offset: 510 CreateTime: 1630141992250 keysize: -1 valuesize: 100 sequence: -1 headerKeys: [] payload: SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNL
+# baseOffset: 511 lastOffset: 1013 count: 503 baseSequence: -1 lastSequence: -1 producerId: -1 producerEpoch: -1 partitionLeaderEpoch: 0 isTransactional: false isControl: false position: 56482 CreateTime: 1630141994761 size: 55765 magic: 2 compresscodec: NONE crc: 1359305274 isvalid: true
+# | offset: 511 CreateTime: 1630141994261 keysize: -1 valuesize: 100 sequence: -1 headerKeys: [] payload: SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNL
+# ...
+# | offset: 1013 CreateTime: 1630141994761 keysize: -1 valuesize: 100 sequence: -1 headerKeys: [] payload: SSXVNJHPDQDXVCRASTVYBCWVMGNYKRXVZXKGXTSPSJDGYLUEGQFLAQLOCFLJBEPOWFNSOMYARHAOPUFOJHHDXEHXJBHWGSMZJGNL
+
+
+
+# 
+kafka-run-class kafka.tools.DumpLogSegments --files /var/lib/kafka/data/${topic_name}-0/00000000000000000000.index
+# Dumping /var/lib/kafka/data/random-topic-0/00000000000000000000.index
+# offset: 1013 position: 56482
+
+
