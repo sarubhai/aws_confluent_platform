@@ -13,7 +13,7 @@ sudo yum -y install git
 cd /home/centos
 git clone --quiet https://github.com/confluentinc/cp-ansible
 cd cp-ansible
-git checkout 6.1.0-post
+git checkout 6.2.1-post
 sudo chown -R centos:centos /home/centos/cp-ansible
 
 # Add Private Key File
