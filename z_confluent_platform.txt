@@ -6,9 +6,10 @@
 # Zookeeper
 ###########
 Service: confluent-zookeeper.service
-Binary: 
+Binary: /usr/bin/zookeeper-server-start
 Configuration: /etc/kafka/zookeeper.properties
 Log File: /var/log/kafka/zookeeper-server.log
+Data Dir: /var/lib/zookeeper
 Useful Commands:
     systemctl -l status confluent-zookeeper.service
 
@@ -16,86 +17,65 @@ Useful Commands:
 # Kafka Broker
 ##############
 Service: confluent-server.service
-Binary: 
-Configuration: etc/kafka/server.properties
+Binary: /usr/bin/kafka-server-start
+Configuration: /etc/kafka/server.properties
 Log File: /var/log/kafka/server.log
+Log Dirs: /var/lib/kafka/data
 Useful Commands:
     systemctl -l status confluent-server.service
-
-Commandline:
-kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=https://ip-10-0-1-30.us-west-2.compute.internal:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50}
-EOF
-
-bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic _confluent-command --from-beginning
-
-kafka-acls --bootstrap-server localhost:9092 --command-config adminclient-configs.conf --add --allow-principal User:* --operation All --topic testTopic
-
-kafka-acls --bootstrap-server ip-10-0-1-20.us-west-2.compute.internal:9092 --command-config adminclient-configs.conf --add --allow-principal User:* --operation CREATE --operation DESCRIBE --cluster
 
 #################
 # Schema Registry
 #################
 Service: confluent-schema-registry.service
-Binary: 
+Binary: /usr/bin/schema-registry-start
 Configuration: /etc/schema-registry/schema-registry.properties
-Log File:
+Log File: /var/log/confluent/schema-registry/schema-registry.log
 Useful Commands:
     systemctl -l status confluent-schema-registry.service
 
 ###############
 # Kafka Connect
 ###############
-Service: confluent-kafka-connect
+Service: confluent-kafka-connect.service
 Binary: /usr/bin/connect-distributed
 Configuration: /etc/kafka/connect-distributed.properties
 Log File: /var/log/kafka/connect.log
 Useful Commands:
+    systemctl -l status confluent-kafka-connect.service
     systemctl restart confluent-kafka-connect
     tail -f /var/log/kafka/connect.log
 
 ################
 # Control Center
 ################
-Service: confluent-control-center
+Service: confluent-control-center.service
 Binary: /usr/bin/control-center-start
 Configuration: /etc/confluent-control-center/control-center-production.properties
 Log File: /var/log/confluent/control-center/control-center.log
 Useful Commands:
+    systemctl -l status confluent-control-center.service
     systemctl restart confluent-control-center
     tail -f /var/log/confluent/control-center/control-center.log
 
 #########
 # KSQL DB
 #########
-Service: confluent-ksqldb
-Binary: 
+Service: confluent-ksqldb.service
+Binary: /usr/bin/ksql-server-start
 Configuration: /etc/ksqldb/ksql-server.properties
-Log File:
+Log File: /var/log/confluent/ksql/ksql.log
+State Dir: /var/lib/kafka-streams
 Useful Commands:
+    systemctl -l status confluent-ksqldb.service
     systemctl restart confluent-ksqldb
-Commandline:    
-    LIST TOPICS;
-    PRINT 'EMPLOYEES' FROM BEGINNING;
-    CREATE STREAM EMPLOYEES_STREAM WITH (KAFKA_TOPIC='EMPLOYEES', VALUE_FORMAT='AVRO');
-    SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, EMAIL FROM EMPLOYEES_STREAM EMIT CHANGES LIMIT 5;
-
-    CREATE STREAM CONSULTANTS_STREAM WITH (KAFKA_TOPIC='BUS-CONSULTANTS', VALUE_FORMAT='AVRO');
-    SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, EMAIL FROM CONSULTANTS_STREAM EMIT CHANGES LIMIT 5;
-
-    SELECT ID, FIRST_NAME, LAST_NAME, EMAIL FROM EMPLOYEES_STREAM_DBZ_SRC EMIT CHANGES;
-    SELECT AFTER->ID AS ID, AFTER->FIRST_NAME AS FIRST_NAME, AFTER->LAST_NAME AS LAST_NAME, AFTER->EMAIL AS NEW_EMAIL FROM EMPLOYEES_STREAM_DBZ_SRC EMIT CHANGES;
-    SELECT OP, AFTER->ID, BEFORE->EMAIL AS EMAIL_BEFORE, AFTER->EMAIL AS EMAIL_AFTER FROM EMPLOYEES_STREAM_DBZ_SRC EMIT CHANGES;
-    SELECT TIMESTAMPTOSTRING(ROWTIME, 'yyyy-MM-dd HH:mm:ss Z'), OP, ROWTIME - SOURCE->TS_MS AS LAG_MS FROM EMPLOYEES_STREAM_DBZ_SRC EMIT CHANGES;
-    SELECT TIMESTAMPTOSTRING(ROWTIME, 'yyyy-MM-dd HH:mm:ss Z'), ROWTIME - UPDATE_TS AS LAG_MS FROM EMPLOYEES_STREAM_DBZ_SRC EMIT CHANGES;
 
 ############
 # REST Proxy
 ############
 Service: confluent-kafka-rest.service
-Binary: 
+Binary: /usr/bin/kafka-rest-start
 Configuration: /etc/kafka-rest/kafka-rest.properties
-Log File:
+Log File: /var/log/confluent/kafka-rest/kafka-rest.log
 Useful Commands:
     systemctl -l status confluent-kafka-rest.service

@@ -114,9 +114,13 @@ output "database_server_ip" {
   description = "Database Server IP."
 }
 
+output "control_center_url" {
+  value       = "https://${module.instances.control_center_instances_ip[0]}:9021"
+  description = "The Control Center URL."
+}
 
 # OpenVPN Access Server
-output "openvpn_access_server_ip" {
+output "openvpn_access_server_url" {
   value       = "https://${module.openvpn.openvpn_access_server_ip}:943/"
-  description = "OpenVPN Access Server IP."
+  description = "OpenVPN Access Server URL."
 }

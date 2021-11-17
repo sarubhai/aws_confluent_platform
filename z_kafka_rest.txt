@@ -18,7 +18,7 @@ curl -s -k -X GET ${rest_proxy}/topics | jq
 curl -s -k -X GET ${rest_proxy}/topics/_schemas | jq
 
 # Kafka Topic Create
-topic_name='pg-consultants'
+topic_name='product-topic'
 curl -s -k -X POST -H "Content-Type: application/vnd.kafka.v2+json" ${rest_proxy}/topics \
   --data '{"topic_name": "pg-consultants", "partitions_count": 3, "replication_factor": 2, "configs": [{"name": "cleanup.policy", "value": "delete"},{"name": "retention.ms", "value": 3600000}]}' | jq
 
@@ -26,7 +26,6 @@ curl -s -k -X POST -H "Content-Type: application/vnd.kafka.v2+json" ${rest_proxy
 curl -s -k -X GET ${rest_proxy}/${topic_name} | jq
 
 # kafka Topic Delete
-curl -s -k -X DELETE ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics/${topic_name} | jq
 
 
 

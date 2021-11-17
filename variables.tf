@@ -100,7 +100,7 @@ variable "ksql_instances" {
 
 variable "database_instance" {
   description = "The Database Server Instance."
-  default     = { instance_type : "t2.large", pvt_ip : "10.0.1.100" }
+  default     = { instance_type : "t2.xlarge", pvt_ip : "10.0.1.100" }
 }
 
 variable "db_password" {
@@ -127,4 +127,27 @@ variable "vpn_admin_user" {
 
 variable "vpn_admin_password" {
   description = "The OpenVPN Admin Password."
+}
+
+
+# Twitter
+variable "twitter_consumer_key" {
+  description = "The Twitter Consumer Key."
+}
+
+variable "twitter_consumer_secret" {
+  description = "The Twitter Consumer Secret."
+}
+
+variable "twitter_access_token" {
+  description = "The Twitter Access Token."
+}
+
+variable "twitter_access_token_secret" {
+  description = "The Twitter Access Token Secret."
+}
+
+variable "twitter_filter_tag" {
+  description = "The Twitter Filter Tags."
+  default     = "#covid19"
 }

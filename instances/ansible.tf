@@ -33,22 +33,27 @@ data "aws_ami" "ansible_centos" {
 # User Data Init
 data "template_file" "ansible_init_script" {
   template = templatefile("${path.module}/ansible_server.sh", {
-    keypair_name        = var.keypair_name
-    private_key         = var.private_key
-    zookeeper_pvt       = aws_instance.zookeeper[*].private_dns
-    zookeeper_pub       = aws_instance.zookeeper[*].public_dns
-    kafka_broker_pvt    = aws_instance.kafka_broker[*].private_dns
-    kafka_broker_pub    = aws_instance.kafka_broker[*].public_dns
-    rest_proxy_pvt      = aws_instance.rest_proxy[*].private_dns
-    rest_proxy_pub      = aws_instance.rest_proxy[*].public_dns
-    control_center_pvt  = aws_instance.control_center[*].private_dns
-    control_center_pub  = aws_instance.control_center[*].public_dns
-    schema_registry_pvt = aws_instance.schema_registry[*].private_dns
-    schema_registry_pub = aws_instance.schema_registry[*].public_dns
-    kafka_connect_pvt   = aws_instance.kafka_connect[*].private_dns
-    kafka_connect_pub   = aws_instance.kafka_connect[*].public_dns
-    ksql_pvt            = aws_instance.ksql[*].private_dns
-    ksql_pub            = aws_instance.ksql[*].public_dns
+    keypair_name                = var.keypair_name
+    private_key                 = var.private_key
+    zookeeper_pvt               = aws_instance.zookeeper[*].private_dns
+    zookeeper_pub               = aws_instance.zookeeper[*].public_dns
+    kafka_broker_pvt            = aws_instance.kafka_broker[*].private_dns
+    kafka_broker_pub            = aws_instance.kafka_broker[*].public_dns
+    rest_proxy_pvt              = aws_instance.rest_proxy[*].private_dns
+    rest_proxy_pub              = aws_instance.rest_proxy[*].public_dns
+    control_center_pvt          = aws_instance.control_center[*].private_dns
+    control_center_pub          = aws_instance.control_center[*].public_dns
+    schema_registry_pvt         = aws_instance.schema_registry[*].private_dns
+    schema_registry_pub         = aws_instance.schema_registry[*].public_dns
+    kafka_connect_pvt           = aws_instance.kafka_connect[*].private_dns
+    kafka_connect_pub           = aws_instance.kafka_connect[*].public_dns
+    ksql_pvt                    = aws_instance.ksql[*].private_dns
+    ksql_pub                    = aws_instance.ksql[*].public_dns
+    twitter_consumer_key        = var.twitter_consumer_key
+    twitter_consumer_secret     = var.twitter_consumer_secret
+    twitter_access_token        = var.twitter_access_token
+    twitter_access_token_secret = var.twitter_access_token_secret
+    twitter_filter_tag          = var.twitter_filter_tag
   })
 }
 

@@ -21,9 +21,9 @@ curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics | jq |
 curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics | jq | grep '.topic_name' | grep 'connect-'
 
 # Kafka Topic Create
-topic_name='pg-consultants'
+topic_name='product-topic'
 curl -s -k -X POST -H "Content-Type: application/json" ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics \
-  --data '{"topic_name": "pg-consultants", "partitions_count": 3, "replication_factor": 2, "configs": [{"name": "cleanup.policy", "value": "delete"},{"name": "retention.ms", "value": 3600000}]}' | jq
+  --data '{"topic_name": "product-topic", "partitions_count": 3, "replication_factor": 2, "configs": [{"name": "cleanup.policy", "value": "delete"},{"name": "retention.ms", "value": 3600000}]}' | jq
 
 # Kafka Topic Info
 curl -s -k -X GET ${kafka_cluster}/kafka/v3/clusters/${cluster_id}/topics/${topic_name} | jq

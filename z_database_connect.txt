@@ -6,56 +6,61 @@
 db_password='Password'
 
 ##########################################
-# Connect to Oracle XE 11g Source
-sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))" as sysdba
-sqlplus "orcl_user/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))"
+# Connect to Oracle 19EE Source
+sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.1.100)(PORT=1521))(CONNECT_DATA=(SID=ORCLCDB)))" as sysdba
+# SELECT LOG_MODE FROM V$DATABASE;
+# SELECT SUPPLEMENTAL_LOG_DATA_MIN, SUPPLEMENTAL_LOG_DATA_PK FROM V$DATABASE;
+# ARCHIVE LOG LIST;
+
+ALTER SESSION SET CONTAINER=ORCLPDB1;
 
 SET LINESIZE 4000
-select count(1) from CONSULTANTS;
-select ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT from CONSULTANTS;
+SELECT COUNT(1) FROM ORCL_USER.CONSULTANTS;
+SELECT ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT FROM ORCL_USER.CONSULTANTS;
 
-insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Saurav', 'Mitra', 'saurav.mitra@ashnik.com', 5000.00, 'perm');
-commit;
-update CONSULTANTS set RATE=6100.25 where EMAIL='saurav.mitra@ashnik.com';
-commit;
-insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Tim', 'Smith', 'tim.smith@freelance.com', 3500.70, 'contract');
-commit;
-delete from CONSULTANTS where EMAIL='tim.smith@freelance.com';
-commit;
-insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Shane', 'Wilson', 'shane.wilson@freelance.com', 5000.00, 'perm');
-commit;
-insert into CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('John', 'Sinha', 'john.sinha@freelance.com', 9000.00, 'contract');
-commit;
+INSERT INTO ORCL_USER.CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) VALUES ('Saurav', 'Mitra', 'saurav.mitra@ashnik.com', 5000.00, 'perm');
+COMMIT;
+UPDATE ORCL_USER.CONSULTANTS SET RATE=6100.25 WHERE EMAIL='saurav.mitra@ashnik.com';
+COMMIT;
+INSERT INTO ORCL_USER.CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) VALUES ('Tim', 'Smith', 'tim.smith@freelance.com', 3500.70, 'contract');
+COMMIT;
+DELETE FROM ORCL_USER.CONSULTANTS WHERE EMAIL='tim.smith@freelance.com';
+COMMIT;
+INSERT INTO ORCL_USER.CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) VALUES ('Shane', 'Wilson', 'shane.wilson@freelance.com', 5000.00, 'perm');
+COMMIT;
+INSERT INTO ORCL_USER.CONSULTANTS (FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) VALUES ('John', 'Sinha', 'john.sinha@freelance.com', 9000.00, 'contract');
+COMMIT;
 
-select count(1) from employees;
+SELECT COUNT(1) FROM ORCL_USER.EMPLOYEES;
 set long 100000
 set head off
 set echo off
 set pagesize 0
 set verify off
 set feedback off
-select dbms_metadata.get_ddl('TABLE','EMPLOYEES','ORCL_USER') from dual;
+SELECT DBMS_METADATA.GET_DDL('TABLE','EMPLOYEES','ORCL_USER') FROM DUAL;
 
 exit
 
 
-# Connect to Oracle XE 11g Target
-sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))" as sysdba
-sqlplus "orcl_user/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE)))"
+# Connect to Oracle 19EE Target
+sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.1.100)(PORT=1525))(CONNECT_DATA=(SID=ORCLCDB)))" as sysdba
+
+ALTER SESSION SET CONTAINER=ORCLPDB1;
 
 SET LINESIZE 4000
 SELECT DISTINCT OBJECT_NAME FROM DBA_OBJECTS WHERE OBJECT_TYPE = 'TABLE' AND OWNER = 'ORCL_USER';
-select count(1) from EMPLOYEES;
-select * from EMPLOYEES;
+SELECT COUNT(1) FROM ORCL_USER.EMPLOYEES;
+SELECT * FROM ORCL_USER.EMPLOYEES;
 
-select count(1) from EMPLOYEES1;
-select * from EMPLOYEES1;
+SELECT COUNT(1) FROM ORCL_USER.EMPLOYEES1;
+SELECT * FROM ORCL_USER.EMPLOYEES1;
 
-select count(1) from CONSULTANTS;
-select ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT from CONSULTANTS;
+SELECT COUNT(1) FROM ORCL_USER.CONSULTANTS;
+SELECT ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT FROM ORCL_USER.CONSULTANTS;
 
-select count(1) from CONSULTANTS1;
-select ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT from CONSULTANTS1;
+SELECT COUNT(1) FROM ORCL_USER.CONSULTANTS1;
+SELECT ID, FIRST_NAME, LAST_NAME, EMAIL, RATE, UPDATED_AT FROM ORCL_USER.CONSULTANTS1;
 
 exit
 ##########################################
@@ -127,7 +132,8 @@ show dbs
 use sales
 show collections
 db.products.find()
-db.products.drop()
+db.products.count()
+# db.products.drop()
 exit
 ##########################################
 
@@ -138,8 +144,8 @@ exit
 redis-cli -h 127.0.0.1 -p 6379 -a ${db_password}
 select 1
 keys *
-set key1 10
-get key1
+get "1"
+get "10"
 exit
 ##########################################
 
@@ -147,10 +153,10 @@ exit
 ##########################################
 # Connect to MSSQL
 mssql-cli -S localhost -U sa -P ${db_password} -d AdventureWorks -Q "\lt"
-mssql-cli -S localhost -U sa -P ${db_password} -d AdventureWorks -Q "select count(1) from SalesLT.Product"
+mssql-cli -S localhost -U sa -P ${db_password} -d AdventureWorks -Q "select count(1) from SalesLT.Customer"
 
 mssql-cli -S localhost -U sa -P ${db_password} -d AdventureWorks 
-select * from SalesLT.Product;
+select * from SalesLT.Customer;
 
 exit
 ##########################################

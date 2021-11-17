@@ -109,3 +109,25 @@ variable "database_instance" {
 variable "db_password" {
   description = "The Database Admin Password."
 }
+
+
+# Twitter
+variable "twitter_consumer_key" {
+  description = "The Twitter Consumer Key."
+}
+
+variable "twitter_consumer_secret" {
+  description = "The Twitter Consumer Secret."
+}
+
+variable "twitter_access_token" {
+  description = "The Twitter Access Token."
+}
+
+variable "twitter_access_token_secret" {
+  description = "The Twitter Access Token Secret."
+}
+
+variable "twitter_filter_tag" {
+  description = "The Twitter Filter Tags."
+}

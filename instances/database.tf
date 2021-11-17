@@ -49,7 +49,7 @@ resource "aws_instance" "database-server" {
   source_dest_check      = false
 
   root_block_device {
-    volume_size           = 30
+    volume_size           = 50
     delete_on_termination = true
   }
 

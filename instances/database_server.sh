@@ -3,6 +3,18 @@
 # Owner: Saurav Mitra
 # Description: Configure containerized database server for demo
 
+# Create SWAP space
+fallocate -l 4G /swapfile 
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+sysctl vm.swappiness=10
+sysctl vm.vfs_cache_pressure=50
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
+echo 'vm.vfs_cache_pressure=50' | sudo tee -a /etc/sysctl.conf
+
+
 # Install Docker, Docker-compose
 sudo yum -y update
 sudo yum -y install yum-utils
@@ -33,29 +45,39 @@ echo 'export PATH' >> ~/.bash_profile
 source ~/.bash_profile
 
 
-# Build Oracle 11g Image (oracle/database:11.2.0.2-xe)
+# Build Oracle 19c Image (oracle/database:19.3.0-ee)
 cd /root
 sudo yum -y install git
 git clone https://github.com/oracle/docker-images.git
-cd /root/docker-images/OracleDatabase/SingleInstance/dockerfiles/11.2.0.2
-curl https://ashnik-confluent-oracle-demo.s3-us-west-2.amazonaws.com/oracle-xe-11.2.0-1.0.x86_64.rpm.zip -o oracle-xe-11.2.0-1.0.x86_64.rpm.zip
+cd /root/docker-images/OracleDatabase/SingleInstance/dockerfiles/19.3.0
+curl https://ashnik-confluent-oracle-demo.s3-us-west-2.amazonaws.com/LINUX.X64_193000_db_home.zip -o LINUX.X64_193000_db_home.zip
 cd /root/docker-images/OracleDatabase/SingleInstance/dockerfiles
-./buildContainerImage.sh -x -v 11.2.0.2 -o "--memory=1g --memory-swap=2g"
+./buildContainerImage.sh -e -v 19.3.0 -o "--memory=4g --memory-swap=4g --build-arg SLIMMING=false" >> /root/oracleimg.log
 
+
+sudo mkdir -p /opt/oracle/oradata
+sudo useradd -m -d /opt/oracle/oradata -u 54321 oracle
+chown -R oracle:oracle /opt/oracle
 
 # Spawn Oracle Source Container
 mkdir /root/oracle_src
 cd /root/oracle_src
+curl https://ashnik-confluent-oracle-demo.s3-us-west-2.amazonaws.com/oracle_src_objects.sql -o oracle_src_objects.sql
+curl https://ashnik-confluent-oracle-demo.s3-us-west-2.amazonaws.com/oracle_src_data.sql -o oracle_src_data.sql
+sed -i 's|PASSWORD|${db_password}|g' oracle_src_objects.sql
 sudo tee /root/oracle_src/docker-compose.yml &>/dev/null <<EOF
 version: "3"
 services:
   oracle_src:
-    image: oracle/database:11.2.0.2-xe
+    image: oracle/database:19.3.0-ee
     shm_size: 1gb
     ports:
       - "1521:1521"
     environment:
       - ORACLE_PWD=${db_password}
+      - ENABLE_ARCHIVELOG=true
+    volumes:
+      - /opt/oracle/oradata:/opt/oracle/oradata
 EOF
 
 docker-compose up -d
@@ -63,11 +85,13 @@ docker-compose up -d
 # Spawn Oracle Target Container
 mkdir /root/oracle_tgt
 cd /root/oracle_tgt
+curl https://ashnik-confluent-oracle-demo.s3-us-west-2.amazonaws.com/oracle_tgt_objects.sql -o oracle_tgt_objects.sql
+sed -i 's|PASSWORD|${db_password}|g' oracle_tgt_objects.sql
 sudo tee /root/oracle_tgt/docker-compose.yml &>/dev/null <<EOF
 version: "3"
 services:
   oracle_tgt:
-    image: oracle/database:11.2.0.2-xe
+    image: oracle/database:19.3.0-ee
     shm_size: 1gb
     ports:
       - "1525:1521"
@@ -78,62 +102,21 @@ EOF
 docker-compose up -d
 
 # Initial Database Setup
-# Oracle XE 11g Source
+# Oracle EE 19c Source
 while [ "`docker inspect -f {{.State.Health.Status}} oracle_src_oracle_src_1`" != "healthy" ]; do
   sleep 60;
 done;
 # SYSDBA
-sqlplus -s /nolog <<EOF >${db_password}
-connect sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE))) as sysdba
-alter user hr account unlock identified by hr;
-create user orcl_user identified by ${db_password};
-grant DBA to orcl_user;
-create table orcl_user.EMPLOYEES as select * from hr.EMPLOYEES;
-create table orcl_user.DEPARTMENTS as select * from hr.DEPARTMENTS;
-create table orcl_user.JOBS as select * from hr.JOBS;
-create table orcl_user.JOB_HISTORY as select * from hr.JOB_HISTORY;
-create table orcl_user.COUNTRIES as select * from hr.COUNTRIES;
-create table orcl_user.REGIONS as select * from hr.REGIONS;
-create table orcl_user.LOCATIONS as select * from hr.LOCATIONS;
-alter database ADD SUPPLEMENTAL LOG DATA;
-alter database ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
-quit
-EOF
-
-# ORCL
-sqlplus -s /nolog <<EOF >${db_password}
-connect orcl_user/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SID=XE)))
-CREATE TABLE CONSULTANTS("ID" NUMBER(10) NOT NULL PRIMARY KEY,"FIRST_NAME" VARCHAR(50),"LAST_NAME" VARCHAR(50),"EMAIL" VARCHAR(50),"RATE" NUMBER(8,2),"STATUS" VARCHAR(20),"CREATED_AT" timestamp DEFAULT CURRENT_TIMESTAMP,"UPDATED_AT" timestamp NOT NULL);
-CREATE SEQUENCE CONSULTANTS_SEQUENCE;
-CREATE OR REPLACE TRIGGER TRG_CONSULTANTS_INS BEFORE INSERT ON CONSULTANTS FOR EACH ROW  BEGIN  SELECT CONSULTANTS_SEQUENCE.nextval INTO :new.ID FROM dual; END;
-/
-CREATE OR REPLACE TRIGGER TRG_CONSULTANTS_UPD BEFORE INSERT OR UPDATE ON CONSULTANTS REFERENCING NEW AS NEW_ROW FOR EACH ROW  BEGIN   SELECT SYSDATE INTO :NEW_ROW.UPDATED_AT FROM DUAL; END;
-/
-insert into CONSULTANTS(FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('John', 'Doe', 'john.doe@gmail.com', 3000.00, 'perm');
-insert into CONSULTANTS(FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Tom', 'Hanks', 'tom.hanks@yahoo.com', 3500.75, 'contract');
-insert into CONSULTANTS(FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Jane', 'Doe', 'jane.doe@moneybank.com', 3500.75, 'perm');
-insert into CONSULTANTS(FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Duke', 'Johnson', 'duke@hello.com', 4500.25, 'contract');
-insert into CONSULTANTS(FIRST_NAME, LAST_NAME, EMAIL, RATE, STATUS) values ('Peter', 'Parker', 'peter@gmail.com', 4500.25, 'contract');
-commit;
-quit
-EOF
+# sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.1.100)(PORT=1521))(CONNECT_DATA=(SID=ORCLCDB)))" as sysdba @/root/oracle_src/oracle_src_objects.sql
 
 
-# Oracle XE 11g Target
+
+# Oracle EE 19c Target
 while [ "`docker inspect -f {{.State.Health.Status}} oracle_tgt_oracle_tgt_1`" != "healthy" ]; do
   sleep 60;
 done;
 # SYSDBA
-sqlplus -s /nolog <<EOF >${db_password}
-connect sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1525))(CONNECT_DATA=(SID=XE))) as sysdba
-create user orcl_user identified by ${db_password};
-grant DBA to orcl_user;
-CREATE TABLE "ORCL_USER"."EMPLOYEES"("EMPLOYEE_ID" NUMBER(6,0),"FIRST_NAME" VARCHAR2(20),"LAST_NAME" VARCHAR2(25),"EMAIL" VARCHAR2(25),"PHONE_NUMBER" VARCHAR2(20),"HIRE_DATE" DATE,"JOB_ID" VARCHAR2(10),"SALARY" NUMBER(8,2),"COMMISSION_PCT" NUMBER(2,2),"MANAGER_ID" NUMBER(6,0),"DEPARTMENT_ID" NUMBER(4,0));
-CREATE TABLE "ORCL_USER"."EMPLOYEES1"("EMPLOYEE_ID" NUMBER(6,0),"FIRST_NAME" VARCHAR2(20),"LAST_NAME" VARCHAR2(25),"EMAIL" VARCHAR2(25),"PHONE_NUMBER" VARCHAR2(20),"HIRE_DATE" DATE,"JOB_ID" VARCHAR2(10),"SALARY" NUMBER(8,2),"COMMISSION_PCT" NUMBER(2,2),"MANAGER_ID" NUMBER(6,0),"DEPARTMENT_ID" NUMBER(4,0));
-CREATE TABLE "ORCL_USER"."CONSULTANTS"("ID" NUMBER(10) NOT NULL PRIMARY KEY,"FIRST_NAME" VARCHAR(50),"LAST_NAME" VARCHAR(50),"EMAIL" VARCHAR(50),"RATE" NUMBER(8,2),"STATUS" VARCHAR(20),"CREATED_AT" timestamp DEFAULT CURRENT_TIMESTAMP,"UPDATED_AT" timestamp NOT NULL);
-CREATE TABLE "ORCL_USER"."CONSULTANTS1"("ID" NUMBER(10) NOT NULL PRIMARY KEY,"FIRST_NAME" VARCHAR(50),"LAST_NAME" VARCHAR(50),"EMAIL" VARCHAR(50),"RATE" NUMBER(8,2),"STATUS" VARCHAR(20),"CREATED_AT" timestamp DEFAULT CURRENT_TIMESTAMP,"UPDATED_AT" timestamp NOT NULL);
-quit
-EOF
+# sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.1.100)(PORT=1525))(CONNECT_DATA=(SID=ORCLCDB)))" as sysdba @/root/oracle_tgt/oracle_tgt_objects.sql
 
 
 # Install MySQL Client
@@ -183,7 +166,11 @@ mysql --host=127.0.0.1 --port=3306 --user root -p${db_password} -e "alter table 
 
 
 # Install PostgreSQL Client
-sudo yum -y install postgresql
+sudo yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo yum -y install epel-release yum-utils
+sudo yum-config-manager --enable pgdg14
+sudo yum -y install postgresql14
+
 # Spawn PostgreSQL Source Container
 mkdir /root/postgres_src
 cd /root/postgres_src
@@ -209,12 +196,18 @@ source ~/.bash_profile
 # PostgreSQL Source Database
 sleep 30;
 
-psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "CREATE TABLE consultants(id SERIAL NOT NULL PRIMARY KEY,first_name VARCHAR(50),last_name VARCHAR(50),email VARCHAR(50),rate NUMERIC(8,2),status VARCHAR(20),created_at timestamp without time zone default (now() at time zone 'utc') NOT NULL,updated_at timestamp without time zone default (now() at time zone 'utc') NOT NULL);"
-psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('John', 'Doe', 'john.doe@gmail.com', 3000.00, 'perm');"
-psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('Tom', 'Hanks', 'tom.hanks@yahoo.com', 3500.75, 'contract');"
-psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('Jane', 'Doe', 'jane.doe@moneybank.com', 3500.75, 'perm');"
-psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('Duke', 'Johnson', 'duke@hello.com', 4500.25, 'contract');"
-psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "insert into consultants(first_name, last_name, email, rate, status) values ('Peter', 'Parker', 'peter@gmail.com', 4500.25, 'contract');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "CREATE TABLE consultants(id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,first_name VARCHAR(50),last_name VARCHAR(50),email VARCHAR(50),rate NUMERIC(8,2),status VARCHAR(20),created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "ALTER TABLE consultants REPLICA IDENTITY USING INDEX consultants_pkey;"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('John', 'Doe', 'john.doe@gmail.com', 3000.00, 'perm');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('Tom', 'Hanks', 'tom.hanks@yahoo.com', 3500.75, 'contract');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('Jane', 'Doe', 'jane.doe@moneybank.com', 3500.75, 'perm');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('Duke', 'Johnson', 'duke@hello.com', 4500.25, 'contract');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('Peter', 'Parker', 'peter@gmail.com', 4500.25, 'contract');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('Rick', 'Nice', 'rick@gmail.com', 4900, 'contract');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('Tommy', 'Hill', 'tommy@gmail.com', 4100, 'perm');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('Jill', 'Stone', 'jill@gmail.com', 4250.50, 'contract');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('Honey', 'Bee', 'honey@gmail.com', 3200, 'perm');"
+psql -U postgres -h 127.0.0.1 -p 5432 -d postgres -c "INSERT INTO consultants(first_name, last_name, email, rate, status) values ('Bell', 'Doe', 'bell@gmail.com', 34000, 'contract');"
 
 
 # Spawn PostgreSQL Target Container
@@ -239,7 +232,11 @@ docker-compose up -d
 # PostgreSQL Target Database
 sleep 30;
 
-psql -U postgres -h 127.0.0.1 -p 5433 -d postgres -c "CREATE TABLE consultants(id INTEGER NOT NULL PRIMARY KEY,first_name VARCHAR(50),last_name VARCHAR(50),email VARCHAR(50),rate NUMERIC(8,2),status VARCHAR(20),created_at timestamp without time zone NOT NULL,updated_at timestamp without time zone NOT NULL);"
+psql -U postgres -h 127.0.0.1 -p 5433 -d postgres -c "CREATE TABLE consultants(id INT PRIMARY KEY,first_name VARCHAR(50),last_name VARCHAR(50),email VARCHAR(50),rate NUMERIC(8,2),status VARCHAR(20),created_at TIMESTAMP,updated_at TIMESTAMP);"
+psql -U postgres -h 127.0.0.1 -p 5433 -d postgres -c "CREATE TABLE consultants1(id INT PRIMARY KEY,first_name VARCHAR(50),last_name VARCHAR(50),email VARCHAR(50),rate NUMERIC(8,2),status VARCHAR(20),created_at TIMESTAMP,updated_at TIMESTAMP);"
+psql -U postgres -h 127.0.0.1 -p 5433 -d postgres -c "CREATE TABLE product(id INT PRIMARY KEY,code VARCHAR(50),category VARCHAR(6),make VARCHAR(50),model VARCHAR(50),year VARCHAR(50),color VARCHAR(50),price INT,currency VARCHAR(50),update_date TIMESTAMP,create_date TIMESTAMP);"
+psql -U postgres -h 127.0.0.1 -p 5433 -d postgres -c "CREATE TABLE customer(customerid INT PRIMARY KEY,namestyle VARCHAR(5),title VARCHAR(8),firstname VARCHAR(50),middlename VARCHAR(50),lastname VARCHAR(50),suffix VARCHAR(10),companyname VARCHAR(128),salesperson VARCHAR(256),emailaddress VARCHAR(50),phone VARCHAR(25),passwordhash VARCHAR(128),passwordsalt VARCHAR(10),rowguid VARCHAR(50),modifieddate TIMESTAMP);"
+psql -U postgres -h 127.0.0.1 -p 5433 -d postgres -c "CREATE TABLE customer1(customerid INT PRIMARY KEY,namestyle VARCHAR(5),title VARCHAR(8),firstname VARCHAR(50),middlename VARCHAR(50),lastname VARCHAR(50),suffix VARCHAR(10),companyname VARCHAR(128),salesperson VARCHAR(256),emailaddress VARCHAR(50),phone VARCHAR(25),passwordhash VARCHAR(128),passwordsalt VARCHAR(10),rowguid VARCHAR(50),modifieddate TIMESTAMP);"
 
 
 # Spawn Elasticsearch Container
@@ -345,24 +342,13 @@ curl -L https://github.com/Microsoft/sql-server-samples/releases/download/advent
 sudo docker cp AdventureWorksLT2019.bak mssql:/AdventureWorksLT2019.bak
 mssql-cli -S localhost -U sa -P ${db_password} -Q "RESTORE DATABASE [AdventureWorks] FROM DISK='/AdventureWorksLT2019.bak' WITH MOVE 'AdventureWorksLT2012_Data' TO '/var/opt/mssql/data/AdventureWorks.mdf', MOVE 'AdventureWorksLT2012_Log' TO '/var/opt/mssql/data/AdventureWorks_log.ldf'"
 mssql-cli -S localhost -U sa -P ${db_password} -Q "USE adventureworks; EXEC sp_changedbowner 'sa'; EXEC sys.sp_cdc_enable_db;"
-mssql-cli -S localhost -U sa -P ${db_password} -d adventureworks -Q "EXEC sys.sp_cdc_enable_table @source_schema = 'saleslt', @source_name = 'product', @role_name = NULL, @supports_net_changes = 0;"
+mssql-cli -S localhost -U sa -P ${db_password} -d adventureworks -Q "EXEC sys.sp_cdc_enable_table @source_schema = 'saleslt', @source_name = 'customer', @role_name = NULL, @supports_net_changes = 0;"
 
 
-# Spawn RabbitMQ Container
-mkdir /root/rabbitmq
-cd /root/rabbitmq
-sudo tee /root/rabbitmq/docker-compose.yml &>/dev/null <<EOF
-version: "3.1"
-services:
-  rabbitmq:
-    image: rabbitmq:3.8-management
-    container_name: "rabbitmq"
-    ports:
-      - 5672:5672
-      - 15672:15672
-    environment:
-      RABBITMQ_DEFAULT_USER: rabbitmq
-      RABBITMQ_DEFAULT_PASS: ${db_password}
-EOF
 
-docker-compose up -d
+# Oracle Objects Try Now
+sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.1.100)(PORT=1521))(CONNECT_DATA=(SID=ORCLCDB)))" as sysdba @/root/oracle_src/oracle_src_objects.sql
+sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.1.100)(PORT=1521))(CONNECT_DATA=(SID=ORCLCDB)))" as sysdba @/root/oracle_src/oracle_src_data.sql
+sqlplus "sys/${db_password}@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.1.100)(PORT=1525))(CONNECT_DATA=(SID=ORCLCDB)))" as sysdba @/root/oracle_tgt/oracle_tgt_objects.sql
+
+touch /root/done.out
