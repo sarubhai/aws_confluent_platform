@@ -10,15 +10,15 @@ CP-Ansible
 
 The Instances & Services that will be deployed from this repository are:
 
-- Ansible Controller Node Instance
-- Zookeeper Instances
-- Kafka Broker Instances
-- REST Proxy Instances
-- Confluent Control Center Instances
-- Schema Registry Instances
-- Kafka Connect Instances
-- KSQL Server Instances
-- Demo Database Server Instance
+- 10.0.0.10 Ansible Controller Node Instance
+- 10.0.1.10, 10.0.1.11, 10.0.1.12 Zookeeper Instances
+- 10.0.1.20, 10.0.1.21, 10.0.1.22 Kafka Broker Instances
+- 10.0.1.30 Schema Registry Instance
+- 10.0.1.40 Kafka Connect Instance
+- 10.0.1.50 Confluent Control Center Instance
+- 10.0.1.60 KSQL Server Instance
+- 10.0.1.70 REST Proxy Instance
+- 10.0.1.100 Demo Database Server Instance
 
 Ansible Controller Node Instance will be deployed in Public Subnet. All Confluent instances will be deployed in Private Subnet with fixed Private IP address.
 
